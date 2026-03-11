@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📡 ProgressPing</title>
+  <meta name="description" content="Daily & Weekly Parent Communication Tool for Teachers" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <!-- React + Babel for single-file deployment -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+
+
+const PROMPTS = {
+  positive_academic: [
+    "demonstrates a strong understanding of class material",
+    "is making excellent academic progress this week",
+    "completes assignments on time and with great care",
+    "asks thoughtful questions that enrich our discussions",
+    "shows impressive improvement in written work",
+    "excels in class discussions and contributes meaningfully",
+    "consistently turns in high-quality, well-organized work",
+    "is performing above grade level expectations",
+    "shows strong critical thinking and analytical skills",
+    "has mastered this week's learning objectives with confidence",
+    "actively engages with new concepts and ideas",
+    "applies feedback effectively to improve their work",
+    "demonstrates creativity and originality in assignments",
+    "reads and responds to texts with real insight",
+    "shows genuine enthusiasm for learning new material",
+  ],
+  needs_support_academic: [
+    "needs additional support with recent assignments",
+    "is working toward meeting grade-level expectations",
+    "has difficulty understanding this week's concepts",
+    "is missing key assignments that are affecting their grade",
+    "would benefit greatly from tutoring or extra help sessions",
+    "needs to dedicate more study time at home",
+    "is not yet demonstrating mastery of current objectives",
+    "struggles to complete work independently without support",
+    "needs to review foundational skills before moving forward",
+    "has shown a decline in work quality this week",
+  ],
+  positive_participation: [
+    "participates actively and enthusiastically in every class",
+    "volunteers answers and contributes to group discussions",
+    "is a positive and engaged presence in the classroom",
+    "listens attentively during all instruction",
+    "collaborates exceptionally well with peers during group work",
+    "shows strong leadership during cooperative activities",
+    "is respectful and genuinely supportive of classmates",
+    "brings positive energy to our learning community",
+    "takes initiative during class activities",
+    "has been noticeably more willing to participate — great growth!",
+    "contributes creative ideas during brainstorming sessions",
+    "demonstrates growth in confidence when sharing ideas",
+  ],
+  needs_support_participation: [
+    "needs encouragement to participate more actively in class",
+    "is reluctant to share ideas during class discussions",
+    "has difficulty staying focused during instruction",
+    "is easily distracted and struggles to stay on task",
+    "needs frequent reminders to stay engaged during lessons",
+    "tends to work in isolation rather than collaborating with peers",
+    "is working on building confidence in sharing answers",
+    "struggles with maintaining attention during group instruction",
+  ],
+  positive_behavior: [
+    "demonstrates excellent self-regulation and classroom behavior",
+    "is consistently respectful to both teachers and classmates",
+    "follows classroom rules and routines independently",
+    "models positive behavior and sets a great example for peers",
+    "shows strong emotional maturity beyond their years",
+    "manages transitions and changes in routine with great ease",
+    "uses conflict resolution strategies effectively",
+    "shows great responsibility with all classroom materials",
+    "is a trustworthy and reliable member of our class community",
+    "has shown notable and commendable improvement in behavior",
+    "responds well to feedback and redirection",
+    "takes full responsibility for their actions",
+    "demonstrates sincere kindness and empathy toward others",
+  ],
+  needs_support_behavior: [
+    "has had a challenging week with behavior expectations",
+    "needs consistent reminders about our classroom rules",
+    "struggles with self-regulation during certain activities",
+    "is working on managing frustration more constructively",
+    "requires additional support following classroom routines",
+    "behavior this week has impacted their own learning",
+    "is working with us to improve conduct in class",
+    "had a disciplinary situation this week — a follow-up conversation is recommended",
+  ],
+  attendance: [
+    "had perfect attendance this week — wonderful dedication!",
+    "was present and on time every single day this week",
+    "was absent one day this week",
+    "was absent two days this week — missed instruction is noted",
+    "was absent three or more days — please reach out to discuss",
+    "has been frequently arriving late to class",
+    "tardiness is beginning to affect their ability to keep up",
+    "attendance has been inconsistent and is a growing concern",
+    "despite recent absences, has worked hard to stay on track",
+    "we encourage more consistent attendance to support their progress",
+  ],
+  attendance_daily: [
+    "was absent from class today",
+    "arrived late to class today",
+    "arrived significantly late and missed important instruction today",
+    "was present and on time today — great!",
+    "left class early today",
+    "was marked late but arrived — please ensure timely arrival",
+    "absence today is noted — please send in a written excuse",
+    "tardiness today disrupted their ability to settle into the lesson",
+  ],
+  positive_homework: [
+    "consistently submits homework that is thorough and well-done",
+    "demonstrates strong effort and care in all written assignments",
+    "turns in all assignments on time without reminders",
+    "shows excellent attention to detail and quality in written work",
+    "carefully proofreads and edits their work before submitting",
+    "provides strong evidence and textual support in written responses",
+    "completes all in-class assignments thoroughly and independently",
+    "written work reflects a clear, developing voice and strong organization",
+    "shows meaningful improvement in writing quality this week",
+    "takes real pride in producing polished, well-crafted final work",
+    "consistently meets or exceeds assignment expectations",
+    "demonstrates strong habits around revision and final preparation",
+    "follows assignment directions carefully and completely",
+    "manages time well to complete work within deadlines",
+    "consistently completes required project work at home and uploads materials to Google Drive before class",
+    "arrives to class fully prepared with all required homework and project materials completed",
+    "demonstrates strong initiative in completing assigned photography and visual art work at home",
+    "collaborates exceptionally well with team members during group and project-based assignments",
+    "takes on a meaningful leadership role during collaborative projects",
+    "communicates effectively and respectfully with partners during group work",
+    "makes excellent use of class time — stays focused and maximizes every work session",
+    "uses unstructured class time productively to advance their project",
+    "demonstrates strong time management during in-class work sessions",
+  ],
+  needs_support_homework: [
+    "is submitting work that does not meet expected quality standards",
+    "written work contains frequent errors in grammar, spelling, and punctuation that require more careful proofreading",
+    "needs to double-check and thoroughly review all work before submitting",
+    "a concern regarding academic integrity has been identified — a parent/guardian conversation is strongly recommended",
+    "submitted work contains evidence of plagiarism and must be redone with original writing",
+    "is not consistently meeting homework deadlines",
+    "has multiple missing assignments that are significantly impacting their grade",
+    "does not complete in-class assignments within the allotted time",
+    "written work lacks sufficient evidence, examples, or textual support",
+    "written responses do not provide enough detail or development of ideas",
+    "needs additional assistance developing and organizing written arguments",
+    "final drafts are being submitted without adequate revision or editing",
+    "needs ongoing support in the process of preparing and polishing final written work",
+    "is not following assignment directions closely or completely",
+    "needs to use class time more productively in order to meet deadlines",
+    "writing skills require further development — extra help sessions are strongly encouraged",
+    "has not been completing required project or assignment work at home",
+    "is not uploading required materials to Google Drive before class as required",
+    "has not completed required film or photography assignments outside of school",
+    "missing out-of-class assignment work is beginning to impact their overall progress",
+    "struggles to collaborate effectively with team members during group projects",
+    "is not contributing equally to group and collaborative assignments",
+    "needs to communicate more openly and respectfully with project partners",
+    "is not making productive use of class time — head is frequently down or off-task",
+    "needs consistent redirection to stay on task during in-class work sessions",
+    "is not maximizing class work time and is falling behind on project milestones",
+    "head is frequently down during class — engagement and active participation need improvement",
+  ],
+  general: [
+    "We are proud of the effort shown this week.",
+    "Please encourage continued reading and review at home.",
+    "We look forward to seeing continued growth next week.",
+    "Feel free to reach out if you have any questions or concerns.",
+    "It was a pleasure having such a great week with your student.",
+    "Please remind your student to bring all required materials daily.",
+    "We are here to support your student every step of the way.",
+    "Your support at home makes a real difference — thank you!",
+    "Please review and sign any returned work in their folder.",
+    "We encourage your student to attend our extra help sessions.",
+    "Looking forward to a strong finish as we head into next week.",
+    "Please ensure homework is being completed nightly.",
+    "Your involvement in your child's education is truly valued.",
+    "We are seeing real growth and want to celebrate that together.",
+    "Please don't hesitate to schedule a conference if needed.",
+  ],
+};
+
+const CATEGORY_META = {
+  positive_academic:          { label: "✅ Academic Strengths",              color: "#2d6a4f", bg: "#d8f3dc" },
+  needs_support_academic:     { label: "📚 Academic Support Needed",         color: "#7b2d00", bg: "#ffe8d6" },
+  positive_participation:     { label: "🙋 Participation Strengths",         color: "#1b4965", bg: "#caf0f8" },
+  needs_support_participation:{ label: "💬 Participation Support Needed",    color: "#5c4a1e", bg: "#fff3b0" },
+  positive_behavior:          { label: "⭐ Behavior Strengths",              color: "#4a1e6e", bg: "#e9d8fd" },
+  needs_support_behavior:     { label: "⚠️ Behavior Concerns",               color: "#7a1e1e", bg: "#fde8e8" },
+  attendance:                 { label: "📅 Attendance",                      color: "#1e4d6b", bg: "#dbeafe" },
+  attendance_daily:           { label: "📅 Attendance — Today",              color: "#1e4d6b", bg: "#dbeafe", dailyOnly: true },
+  positive_homework:          { label: "✏️ Homework & Assignment Strengths", color: "#3d5a00", bg: "#ecfccb" },
+  needs_support_homework:     { label: "📝 Homework & Assignment Concerns",  color: "#7c2d12", bg: "#fef3c7" },
+  general:                    { label: "💡 General Comments",                color: "#374151", bg: "#f3f4f6" },
+};
+
+const SUBJECTS = {
+  "── Required Core Classes ──": [
+    "English 9", "English 10", "English 11", "English 12",
+    "AP English Language & Composition", "AP English Literature & Composition",
+    "Algebra I", "Geometry", "Algebra II", "Pre-Calculus", "Calculus",
+    "AP Calculus AB", "AP Calculus BC", "AP Statistics",
+    "Earth Science", "Living Environment / Biology", "Chemistry", "Physics",
+    "AP Biology", "AP Chemistry", "AP Physics",
+    "Global History I", "Global History II", "US History & Government",
+    "AP US History", "AP World History", "AP Government & Politics",
+    "Health Education", "Physical Education",
+  ],
+  "── Electives ──": [
+    "Creative Writing", "Public Speaking", "Journalism", "Media Literacy",
+    "Economics", "Sociology", "Psychology", "Philosophy",
+    "Environmental Science", "Forensic Science",
+    "Statistics", "Financial Algebra", "Computer Applications",
+    "Graphic Design", "Digital Media Arts", "Web Design",
+    "Music Theory", "Band / Orchestra", "Choir / Vocal Music",
+    "Theater Arts / Drama", "Dance",
+    "Studio Art", "Drawing & Painting", "Sculpture",
+    "Foreign Language: Spanish", "Foreign Language: French",
+    "Foreign Language: Mandarin Chinese", "Foreign Language: Haitian Creole",
+    "Foreign Language: Arabic",
+    "Physical Education Elective", "Health & Wellness",
+    "Home Economics / Family & Consumer Sciences",
+    "Leadership & Community Service",
+  ],
+  "── AP Courses ──": [
+    "AP Art History", "AP Studio Art: Drawing",
+    "AP Studio Art: 2-D Design", "AP Studio Art: 3-D Design",
+    "AP Computer Science Principles", "AP Computer Science A",
+    "AP Environmental Science", "AP Human Geography",
+    "AP Psychology", "AP Economics: Macro", "AP Economics: Micro",
+    "AP Language & Composition", "AP Literature & Composition",
+    "AP Spanish Language", "AP French Language",
+    "AP Music Theory",
+    "AP African American Studies",
+  ],
+  "── Arts, Film & Photography ──": [
+    "Film Studies", "Film Production", "AP Film & Media Studies",
+    "Photography I", "Photography II", "Advanced Photography",
+    "Digital Photography", "Darkroom Photography",
+    "Video Production", "Documentary Filmmaking",
+    "Cinematography", "Screenwriting",
+    "Animation & Motion Graphics",
+    "Visual Arts", "Mixed Media Arts",
+  ],
+  "── Technology & Coding ──": [
+    "Introduction to Coding", "Computer Science I",
+    "Computer Science II", "AP Computer Science A",
+    "AP Computer Science Principles", "Python Programming",
+    "Web Development", "App Development",
+    "Robotics", "Game Design", "Cybersecurity Fundamentals",
+    "Data Science", "Artificial Intelligence & Machine Learning",
+    "3D Design & Printing",
+  ],
+  "── Guidance & Support Services ──": [
+    "Guidance / College Counseling",
+    "Academic Intervention Services (AIS)",
+    "Special Education — Resource Room",
+    "English as a New Language (ENL)",
+    "Social-Emotional Learning (SEL)",
+    "College & Career Readiness",
+    "Independent Study / Self-Directed Learning",
+    "Peer Mediation & Leadership",
+  ],
+  "── After School Programs ──": [
+    "After School Tutoring Program",
+    "After School Arts Program",
+    "After School Film Club",
+    "After School Photography Club",
+    "After School Coding Club",
+    "After School Newspaper / Journalism",
+    "After School Theater Program",
+    "After School Music Program",
+    "After School Sports / Athletics",
+    "After School Community Service",
+    "National Honor Society",
+    "Student Government / Leadership",
+    "STEM After School Program",
+    "College Prep After School Program",
+    "Summer Bridge Program",
+  ],
+};
+
+export default function App() {
+  const [step, setStep] = useState("form");
+  const [reportFrequency, setReportFrequency] = useState("weekly"); // 'weekly' | 'daily'
+  const [teacherName, setTeacherName] = useState("");
+  const [className, setClassName] = useState("");
+  const [studentFirstName, setStudentFirstName] = useState("");
+  const [studentLastInitial, setStudentLastInitial] = useState("");
+  const [weekOf, setWeekOf] = useState("");
+  const [selectedPrompts, setSelectedPrompts] = useState({});
+  const [customNote, setCustomNote] = useState("");
+  const [openCategory, setOpenCategory] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  const [gdocLoading, setGdocLoading] = useState(false);
+  const [gdocDone, setGdocDone] = useState(false);
+
+  const togglePrompt = (category, prompt) => {
+    setSelectedPrompts((prev) => {
+      const current = prev[category] || [];
+      if (current.includes(prompt)) {
+        return { ...prev, [category]: current.filter((p) => p !== prompt) };
+      }
+      return { ...prev, [category]: [...current, prompt] };
+    });
+  };
+
+  const totalSelected = Object.values(selectedPrompts).flat().length;
+
+  const generateReport = () => {
+    const lines = [];
+    const lastPart = studentLastInitial.trim() ? ` ${studentLastInitial.trim().charAt(0).toUpperCase()}.` : "";
+    const sName = studentFirstName.trim() ? `${studentFirstName.trim()}${lastPart}` : "your student";
+    const tName = teacherName.trim() || "Your Child's Teacher";
+    const cName = className.trim() || "our class";
+    const wOf = weekOf || "this week";
+
+    const isDaily = reportFrequency === "daily";
+    const periodWord = isDaily ? "today" : "this week";
+    const reportTypeLabel = isDaily ? "daily progress update" : "weekly progress report";
+    const dateLabel = isDaily ? "Date" : "Week of";
+
+    lines.push(`Dear Parent/Guardian,\n`);
+    lines.push(`This is a ${reportTypeLabel} to let you know how ${sName} is doing ${periodWord} in ${cName}. We value your partnership in your child's education and want to keep you informed of their progress.\n`);
+
+    const academic     = [...(selectedPrompts["positive_academic"] || []),          ...(selectedPrompts["needs_support_academic"] || [])];
+    const participation= [...(selectedPrompts["positive_participation"] || []),     ...(selectedPrompts["needs_support_participation"] || [])];
+    const behavior     = [...(selectedPrompts["positive_behavior"] || []),          ...(selectedPrompts["needs_support_behavior"] || [])];
+    const attendance   = [...(selectedPrompts["attendance"] || []), ...(selectedPrompts["attendance_daily"] || [])];
+    const homework     = [...(selectedPrompts["positive_homework"] || []),          ...(selectedPrompts["needs_support_homework"] || [])];
+    const general      = selectedPrompts["general"] || [];
+
+    if (academic.length > 0)
+      lines.push(`📚 Academically, ${sName} ${academic.join("; and ")}.\n`);
+    if (participation.length > 0)
+      lines.push(`🙋 In terms of class participation, ${sName} ${participation.join("; and ")}.\n`);
+    if (behavior.length > 0)
+      lines.push(`⭐ Regarding behavior and social-emotional growth, ${sName} ${behavior.join("; and ")}.\n`);
+    if (attendance.length > 0)
+      lines.push(`📅 Attendance note: ${sName} ${attendance.join("; ")}.\n`);
+    if (homework.length > 0)
+      lines.push(`✏️ Regarding homework and assignments, ${sName} ${homework.join("; and ")}.\n`);
+    if (general.length > 0)
+      lines.push(general.join(" ") + "\n");
+    if (customNote.trim())
+      lines.push(`Additional note: ${customNote.trim()}\n`);
+
+    lines.push(`Thank you for your continued support. Please don't hesitate to reach out with any questions.\n`);
+    lines.push(`Warm regards,\n${tName}\n${cName}${wOf ? `\nWeek of: ${wOf}` : ""}`);
+
+    return lines.join("\n");
+  };
+
+  const report = generateReport();
+
+  // Detect mobile
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  // Which export panel is showing: null | 'email' | 'doc' | 'formatted'
+  const [exportPanel, setExportPanel] = useState(null);
+
+  const getNames = () => {
+    const lastPart = studentLastInitial.trim() ? ` ${studentLastInitial.trim().charAt(0).toUpperCase()}.` : "";
+    const sName = studentFirstName.trim() ? `${studentFirstName.trim()}${lastPart}` : "your student";
+    const tName = teacherName.trim() || "Teacher";
+    const cName = className.trim() || "Class";
+    const isDaily = reportFrequency === "daily";
+    const wOf = weekOf
+      ? new Date(weekOf + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      : new Date().toLocaleDateString();
+    return { sName, tName, cName, wOf, isDaily };
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(report);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  // EMAIL: builds mailto link and shows it as a tappable link (works in all envs)
+  const handleEmailShare = () => {
+    setExportPanel(exportPanel === "email" ? null : "email");
+  };
+
+  // FORMATTED REPORT: renders inline below the buttons (no popup needed)
+  const handleOpenInGoogleDocs = () => {
+    setExportPanel(exportPanel === "formatted" ? null : "formatted");
+    setGdocDone(true);
+    setTimeout(() => setGdocDone(false), 3000);
+  };
+
+  // DOWNLOAD DOC: uses data: URI which works everywhere including iframes
+  const handleDownloadDoc = () => {
+    const { sName, tName, cName, wOf, isDaily } = getNames();
+    const reportLabel = isDaily ? "Daily Progress Update" : "Weekly Progress Report";
+    const periodLabel = isDaily ? "Date" : "Week of";
+    const docTitle = isDaily
+      ? `ProgressPing – ${sName} – ${wOf}`
+      : `ProgressPing – ${sName} – Week of ${wOf}`;
+
+    const htmlParagraphs = report
+      .split("\n")
+      .map(line => {
+        const escaped = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return escaped.trim() === ""
+          ? `<p style="margin:0 0 6pt 0">&nbsp;</p>`
+          : `<p style="margin:0 0 9pt 0;font-family:Georgia,serif;font-size:12pt;line-height:1.85">${escaped}</p>`;
+      })
+      .join("\n");
+
+    const docHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+<head><meta charset="utf-8"><title>${docTitle}</title>
+<style>@page{margin:1in}body{font-family:Georgia,serif;font-size:12pt;color:#1a1a1a}
+h1{font-size:18pt;color:#203a43;margin-bottom:6pt}
+.meta{font-size:10pt;color:#555;border-bottom:2pt solid #38bdf8;padding-bottom:8pt;margin-bottom:18pt}
+.footer{font-size:9pt;color:#aaa;border-top:1pt solid #eee;margin-top:24pt;padding-top:8pt}</style>
+</head><body>
+<h1>ProgressPing — ${reportLabel}</h1>
+<div class="meta"><strong>Student:</strong> ${sName} &nbsp;&nbsp;
+<strong>Teacher:</strong> ${tName} &nbsp;&nbsp;
+<strong>Class:</strong> ${cName} &nbsp;&nbsp;
+<strong>${periodLabel}:</strong> ${wOf}</div>
+${htmlParagraphs}
+<div class="footer">Generated by ProgressPing · Khali Gap Media LLC</div>
+</body></html>`;
+
+    // data: URI works in all environments including sandboxed iframes
+    const dataUri = "data:application/msword;charset=utf-8," + encodeURIComponent(docHTML);
+    const a = document.createElement("a");
+    a.href = dataUri;
+    a.download = `${docTitle}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 3000);
+  };
+
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)",
+      fontFamily: "'Georgia', 'Times New Roman', serif",
+      padding: "24px 16px",
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:wght@300;400;600&display=swap');
+        * { box-sizing: border-box; }
+        .card { background: #ffffff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+        .input-field {
+          width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb;
+          border-radius: 8px; font-size: 15px; font-family: 'Source Serif 4', serif;
+          transition: border-color 0.2s; outline: none; color: #1f2937;
+        }
+        .input-field:focus { border-color: #2c5364; }
+        .prompt-btn {
+          display: block; width: 100%; text-align: left;
+          padding: 8px 12px; margin: 4px 0;
+          border: 2px solid transparent; border-radius: 8px;
+          cursor: pointer; font-size: 13.5px; font-family: 'Source Serif 4', serif;
+          transition: all 0.15s; background: #f9fafb; color: #374151;
+        }
+        .prompt-btn:hover { border-color: #9ca3af; background: #f3f4f6; }
+        .prompt-btn.selected { border-color: #2c5364; background: #dbeafe; color: #1e3a5f; font-weight: 600; }
+        .cat-header {
+          width: 100%; text-align: left; padding: 12px 16px;
+          border: none; border-radius: 10px; cursor: pointer;
+          font-size: 14px; font-weight: 700; font-family: 'Source Serif 4', serif;
+          display: flex; justify-content: space-between; align-items: center;
+          transition: opacity 0.2s;
+        }
+        .cat-header:hover { opacity: 0.85; }
+        .primary-btn {
+          padding: 14px 32px; border: none; border-radius: 10px;
+          background: linear-gradient(135deg, #203a43, #2c5364);
+          color: white; font-size: 16px; font-weight: 700;
+          font-family: 'Playfair Display', serif; cursor: pointer;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: transform 0.15s, box-shadow 0.15s;
+          letter-spacing: 0.5px;
+        }
+        .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.35); }
+        .secondary-btn {
+          padding: 12px 24px; border: 2px solid #374151; border-radius: 10px;
+          background: white; color: #374151; font-size: 15px; font-weight: 600;
+          font-family: 'Source Serif 4', serif; cursor: pointer; transition: all 0.15s;
+        }
+        .secondary-btn:hover { background: #f3f4f6; }
+        .report-box {
+          background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px;
+          padding: 28px; font-family: 'Source Serif 4', serif; font-size: 15px;
+          line-height: 1.85; color: #1f2937; white-space: pre-wrap;
+        }
+        .badge {
+          display: inline-block; padding: 2px 10px; border-radius: 99px;
+          font-size: 12px; font-weight: 700; font-family: 'Source Serif 4', serif;
+        }
+        .action-btn {
+          padding: 13px 20px; border: none; border-radius: 10px;
+          color: white; font-size: 14px; font-weight: 700;
+          font-family: 'Source Serif 4', serif; cursor: pointer;
+          transition: transform 0.15s, box-shadow 0.15s;
+          box-shadow: 0 3px 12px rgba(0,0,0,0.25); flex: 1 1 auto;
+        }
+        .action-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: "28px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 6 }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: "14px",
+            background: "linear-gradient(135deg, #38bdf8, #0ea5e9)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 24, boxShadow: "0 4px 20px rgba(56,189,248,0.4)"
+          }}>📡</div>
+          <h1 style={{
+            fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 5vw, 46px)",
+            color: "#ffffff", margin: 0, letterSpacing: "-1px",
+            textShadow: "0 2px 20px rgba(0,0,0,0.4)",
+          }}>
+            Progress<span style={{ color: "#38bdf8" }}>Ping</span>
+          </h1>
+        </div>
+        <p style={{ color: "#94a3b8", marginTop: 4, fontSize: 15, fontFamily: "'Source Serif 4', serif", letterSpacing: "0.5px" }}>
+          Daily & Weekly Parent Communication · Built for Teachers
+        </p>
+      </div>
+
+      <div style={{ maxWidth: 780, margin: "0 auto" }}>
+
+        {step === "form" && (
+          <div className="card" style={{ padding: "clamp(20px, 5vw, 40px)" }}>
+
+            <section style={{ marginBottom: 32 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+                <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: "#1f2937", margin: 0 }}>
+                  Student & Class Info
+                </h2>
+                {/* Daily / Weekly Toggle */}
+                <div style={{ display: "flex", background: "#f3f4f6", borderRadius: 10, padding: 4, gap: 4 }}>
+                  {["daily", "weekly"].map(freq => (
+                    <button
+                      key={freq}
+                      onClick={() => setReportFrequency(freq)}
+                      style={{
+                        padding: "8px 20px", border: "none", borderRadius: 8, cursor: "pointer",
+                        fontFamily: "'Source Serif 4', serif", fontSize: 13, fontWeight: 700,
+                        transition: "all 0.2s",
+                        background: reportFrequency === freq ? "linear-gradient(135deg, #203a43, #2c5364)" : "transparent",
+                        color: reportFrequency === freq ? "white" : "#6b7280",
+                        boxShadow: reportFrequency === freq ? "0 2px 8px rgba(0,0,0,0.2)" : "none",
+                      }}
+                    >
+                      {freq === "daily" ? "📅 Daily" : "📆 Weekly"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ display: "flex", gap: 8, gridColumn: "1 / -1" }}>
+                  <div style={{ flex: 2 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>
+                      STUDENT FIRST NAME <span style={{ color: "#9ca3af", fontWeight: 400 }}>— first name only for privacy</span>
+                    </label>
+                    <input className="input-field" placeholder="e.g. Jordan" value={studentFirstName} onChange={e => setStudentFirstName(e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>
+                      LAST INITIAL
+                    </label>
+                    <input
+                      className="input-field"
+                      placeholder="e.g. S"
+                      maxLength={1}
+                      value={studentLastInitial}
+                      onChange={e => setStudentLastInitial(e.target.value.replace(/[^a-zA-Z]/g, ""))}
+                      style={{ textTransform: "uppercase" }}
+                    />
+                  </div>
+                </div>
+                <div style={{ gridColumn: "1 / -1", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 8, padding: "8px 12px", fontSize: 12.5, color: "#1e40af" }}>
+                  🔒 <strong>Privacy tip:</strong> ProgressPing only uses first name + last initial (e.g. "Jordan S.") to protect student identity in compliance with FERPA guidelines.
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>TEACHER NAME</label>
+                  <input className="input-field" placeholder="e.g. Ms. Johnson" value={teacherName} onChange={e => setTeacherName(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>CLASS / SUBJECT</label>
+                  <select
+                    className="input-field"
+                    value={className}
+                    onChange={e => setClassName(e.target.value)}
+                    style={{ cursor: "pointer", appearance: "auto" }}
+                  >
+                    <option value="">— Select a subject —</option>
+                    {Object.entries(SUBJECTS).map(([group, options]) => (
+                      <optgroup key={group} label={group}>
+                        {options.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                    <option value="__custom__">✏️ Other / Type my own...</option>
+                  </select>
+                  {className === "__custom__" && (
+                    <input
+                      className="input-field"
+                      placeholder="Type your class or subject name..."
+                      style={{ marginTop: 8 }}
+                      onChange={e => setClassName(e.target.value)}
+                      autoFocus
+                    />
+                  )}
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>{reportFrequency === "daily" ? "DATE" : "WEEK OF"}</label>
+                  <input className="input-field" type="date" value={weekOf} onChange={e => setWeekOf(e.target.value)} />
+                </div>
+              </div>
+            </section>
+
+            <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", marginBottom: 28 }} />
+
+            <section style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: "#1f2937", margin: 0 }}>
+                  Choose Feedback Prompts
+                </h2>
+                {totalSelected > 0 && (
+                  <span className="badge" style={{ background: "#dbeafe", color: "#1e3a5f" }}>
+                    {totalSelected} selected
+                  </span>
+                )}
+              </div>
+              <p style={{ color: "#6b7280", fontSize: 14, marginTop: -8, marginBottom: 16 }}>
+                Click any category to expand it, then select all prompts that apply to this student.
+              </p>
+
+              {Object.entries(CATEGORY_META).filter(([key, meta]) => {
+
+                if (meta.dailyOnly && reportFrequency === "weekly") return false;
+                return true;
+              }).map(([key, meta]) => {
+                const isOpen = openCategory === key;
+                const selected = selectedPrompts[key] || [];
+                return (
+                  <div key={key} style={{ marginBottom: 8 }}>
+                    <button
+                      className="cat-header"
+                      style={{ background: meta.bg, color: meta.color }}
+                      onClick={() => setOpenCategory(isOpen ? null : key)}
+                    >
+                      <span>
+                        {meta.label}
+                        {selected.length > 0 && (
+                          <span className="badge" style={{ background: meta.color, color: "white", marginLeft: 8 }}>
+                            {selected.length}
+                          </span>
+                        )}
+                      </span>
+                      <span style={{ fontSize: 18 }}>{isOpen ? "▲" : "▼"}</span>
+                    </button>
+                    {isOpen && (
+                      <div style={{ padding: "8px 4px 4px", background: "#fafafa", borderRadius: "0 0 10px 10px", border: "1px solid #e5e7eb", borderTop: "none" }}>
+                        {PROMPTS[key].map((prompt) => (
+                          <button
+                            key={prompt}
+                            className={`prompt-btn ${selected.includes(prompt) ? "selected" : ""}`}
+                            onClick={() => togglePrompt(key, prompt)}
+                          >
+                            {selected.includes(prompt) ? "✓ " : "○ "}{prompt}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </section>
+
+            <section style={{ marginBottom: 28 }}>
+              <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 6 }}>
+                ADDITIONAL PERSONAL NOTE (optional)
+              </label>
+              <textarea
+                className="input-field"
+                rows={3}
+                placeholder="Add any personal notes, upcoming events, or specific feedback..."
+                value={customNote}
+                onChange={e => setCustomNote(e.target.value)}
+                style={{ resize: "vertical" }}
+              />
+            </section>
+
+            <div style={{ textAlign: "center" }}>
+              <button className="primary-btn" onClick={() => setStep("preview")}>
+                Generate Progress Report →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "preview" && (
+          <div className="card" style={{ padding: "clamp(20px, 5vw, 40px)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, color: "#1f2937", margin: 0 }}>
+                  {reportFrequency === "daily" ? "Daily Update" : "Weekly Report"} Preview
+                  <span style={{ marginLeft: 10, fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 99, background: reportFrequency === "daily" ? "#dbeafe" : "#d8f3dc", color: reportFrequency === "daily" ? "#1e3a5f" : "#2d6a4f", verticalAlign: "middle" }}>
+                    {reportFrequency === "daily" ? "📅 Daily" : "📆 Weekly"}
+                  </span>
+                </h2>
+                {studentFirstName && (
+                  <p style={{ color: "#6b7280", margin: "4px 0 0", fontSize: 14 }}>
+                    For: <strong>{studentFirstName}{studentLastInitial ? ` ${studentLastInitial.trim().charAt(0).toUpperCase()}.` : ""}</strong>{weekOf && ` · Week of ${weekOf}`}
+                  </p>
+                )}
+              </div>
+              <button className="secondary-btn" onClick={() => setStep("form")}>← Edit</button>
+            </div>
+
+            <div className="report-box">{report}</div>
+
+{/* Action buttons */}
+            <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                className="action-btn"
+                style={{ background: copied ? "linear-gradient(135deg,#14532d,#16a34a)" : "linear-gradient(135deg,#1e3a5f,#2563eb)" }}
+                onClick={handleCopy}
+              >
+                {copied ? "✓ Copied!" : "📋 Copy Text"}
+              </button>
+              <button
+                className="action-btn"
+                style={{ background: exportPanel === "email" ? "linear-gradient(135deg,#5b21b6,#7c3aed)" : "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
+                onClick={handleEmailShare}
+              >
+                ✉️ {exportPanel === "email" ? "Hide Email" : "Send via Email"}
+              </button>
+              <button
+                className="action-btn"
+                style={{ background: exportPanel === "formatted" ? "linear-gradient(135deg,#14532d,#16a34a)" : "linear-gradient(135deg,#1e6b3a,#16a34a)" }}
+                onClick={handleOpenInGoogleDocs}
+              >
+                📝 {exportPanel === "formatted" ? "Hide Report" : "View Formatted Report"}
+              </button>
+              <button
+                className="action-btn"
+                style={{ background: downloaded ? "linear-gradient(135deg,#14532d,#16a34a)" : "linear-gradient(135deg,#1a5276,#1f618d)" }}
+                onClick={handleDownloadDoc}
+              >
+                {downloaded ? "✓ Downloading!" : "📄 Download .doc"}
+              </button>
+            </div>
+
+            {/* Email Panel */}
+            {exportPanel === "email" && (() => {
+              const { sName, cName, wOf, isDaily } = getNames();
+              const subject = isDaily
+                ? `Daily Progress Update – ${sName} – ${cName} – ${wOf}`
+                : `Weekly Progress Report – ${sName} – ${cName} – Week of ${wOf}`;
+              const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(report)}`;
+              return (
+                <div style={{ marginTop: 14, padding: 18, background: "#f5f3ff", borderRadius: 12, border: "1px solid #ddd6fe" }}>
+                  <p style={{ margin: "0 0 10px 0", fontWeight: 700, fontSize: 14, color: "#5b21b6", fontFamily: "'Source Serif 4', serif" }}>
+                    ✉️ Send via Email
+                  </p>
+                  <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "#4c1d95", fontFamily: "'Source Serif 4', serif", lineHeight: 1.7 }}>
+                    <strong>Subject:</strong> {subject}
+                  </p>
+                  <a
+                    href={mailtoLink}
+                    style={{
+                      display: "inline-block", padding: "10px 22px",
+                      background: "linear-gradient(135deg,#7c3aed,#6d28d9)",
+                      color: "white", borderRadius: 8, textDecoration: "none",
+                      fontWeight: 700, fontSize: 14, fontFamily: "'Source Serif 4', serif",
+                    }}
+                  >
+                    📬 Open in Email App
+                  </a>
+                  <p style={{ margin: "10px 0 0", fontSize: 12, color: "#6d28d9", fontFamily: "'Source Serif 4', serif" }}>
+                    Tap the button above to open Gmail, Mail, or your default email app with the report pre-filled.
+                  </p>
+                </div>
+              );
+            })()}
+
+            {/* Formatted Report Panel */}
+            {exportPanel === "formatted" && (() => {
+              const { sName, tName, cName, wOf, isDaily } = getNames();
+              const reportLabel = isDaily ? "Daily Progress Update" : "Weekly Progress Report";
+              const periodLabel = isDaily ? "Date" : "Week of";
+              return (
+                <div style={{ marginTop: 14, border: "2px solid #38bdf8", borderRadius: 12, overflow: "hidden" }}>
+                  {/* Toolbar */}
+                  <div style={{ background: "#203a43", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                    <span style={{ color: "#38bdf8", fontWeight: 700, fontSize: 15, fontFamily: "'Source Serif 4', serif" }}>📡 ProgressPing — Formatted Report</span>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        style={{ padding: "7px 14px", background: "#2563eb", color: "white", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 700, fontSize: 13 }}
+                        onClick={() => {
+                          const el = document.getElementById("formatted-report-body");
+                          if (el) {
+                            const range = document.createRange();
+                            range.selectNode(el);
+                            window.getSelection().removeAllRanges();
+                            window.getSelection().addRange(range);
+                            document.execCommand("copy");
+                            window.getSelection().removeAllRanges();
+                          } else {
+                            navigator.clipboard.writeText(report);
+                          }
+                        }}
+                      >📋 Select &amp; Copy</button>
+                      <a
+                        href="https://docs.google.com/document/create"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ padding: "7px 14px", background: "white", color: "#203a43", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 700, fontSize: 13, textDecoration: "none" }}
+                      >🗂 Open Google Drive</a>
+                    </div>
+                  </div>
+                  {/* Hint */}
+                  <div style={{ background: "#fffbeb", padding: "10px 20px", fontSize: 13, color: "#92400e", fontFamily: "'Source Serif 4', serif" }}>
+                    💡 Click <strong>Select &amp; Copy</strong>, then open Google Docs and press <strong>⌘V / Ctrl+V</strong> to paste with formatting.
+                  </div>
+                  {/* Document body */}
+                  <div style={{ background: "#f5f5f5", padding: "20px" }}>
+                    <div id="formatted-report-body" style={{ maxWidth: 680, margin: "0 auto", background: "white", padding: "48px 56px", boxShadow: "0 2px 16px rgba(0,0,0,0.1)", borderRadius: 4 }}>
+                      <div style={{ borderBottom: "2px solid #38bdf8", paddingBottom: 14, marginBottom: 20 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#38bdf8", letterSpacing: 2, fontFamily: "Arial, sans-serif", marginBottom: 4 }}>📡 PROGRESSPING</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: "#203a43", fontFamily: "Georgia, serif", marginBottom: 10 }}>{reportLabel}</div>
+                        <div style={{ fontSize: 10, color: "#555", fontFamily: "Arial, sans-serif" }}>
+                          <strong>Student:</strong> {sName} &nbsp;|&nbsp;
+                          <strong>Teacher:</strong> {tName} &nbsp;|&nbsp;
+                          <strong>Class:</strong> {cName} &nbsp;|&nbsp;
+                          <strong>{periodLabel}:</strong> {wOf}
+                        </div>
+                      </div>
+                      <div style={{ fontFamily: "Georgia, serif", fontSize: 12, lineHeight: 1.85, color: "#1a1a1a" }}>
+                        {report.split("\n").map((line, i) =>
+                          line.trim() === ""
+                            ? <div key={i} style={{ height: 8 }} />
+                            : <p key={i} style={{ margin: "0 0 8px 0" }}>{line}</p>
+                        )}
+                      </div>
+                      <div style={{ marginTop: 24, paddingTop: 10, borderTop: "1px solid #eee", fontSize: 9, color: "#aaa", fontFamily: "Arial, sans-serif" }}>
+                        Generated by ProgressPing · Khali Gap Media LLC
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Tip box */}
+            <div style={{ marginTop: 14, padding: 14, background: "#f0fdf4", borderRadius: 10, border: "1px solid #bbf7d0" }}>
+              <p style={{ margin: 0, fontSize: 12.5, color: "#166534", fontFamily: "'Source Serif 4', serif", lineHeight: 1.85 }}>
+                <strong>📋 Copy Text</strong> — paste into ClassDojo, Remind, or Seesaw.&nbsp;
+                <strong>✉️ Email</strong> — opens your email app with report pre-filled.&nbsp;
+                <strong>📝 Formatted Report</strong> — view, copy &amp; paste into Google Docs.&nbsp;
+                <strong>📄 Download .doc</strong> — saves a Word-compatible file.
+              </p>
+            </div>
+
+
+
+            <div style={{ marginTop: 12, padding: 14, background: "#f0fdf4", borderRadius: 10, border: "1px solid #bbf7d0" }}>
+              <p style={{ margin: 0, fontSize: 12.5, color: "#166534", fontFamily: "'Source Serif 4', serif", lineHeight: 1.75 }}>
+                <strong>📋 Copy Text</strong> — paste into email, ClassDojo, Remind, or Seesaw. &nbsp;
+                <strong>📝 Open Report</strong> — opens a formatted, printable report page with one-click copy &amp; Google Drive button. &nbsp;
+                <strong>📄 Download .doc</strong> — saves a Word file to your computer.
+              </p>
+            </div>
+
+            <div style={{ textAlign: "center", marginTop: 24 }}>
+              <button className="primary-btn" onClick={() => {
+                setStudentFirstName(""); setStudentLastInitial(""); setSelectedPrompts({}); setCustomNote(""); setReportFrequency("weekly"); setStep("form");
+              }}>
+                + New Report for Another Student
+              </button>
+            </div>
+          </div>
+        )}
+
+        <p style={{ textAlign: "center", color: "#64748b", fontSize: 12, marginTop: 20, fontFamily: "'Source Serif 4', serif" }}>
+          📡 ProgressPing · Weekly Reports Made Easy · {new Date().getFullYear()}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
