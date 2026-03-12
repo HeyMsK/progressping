@@ -386,6 +386,8 @@ function App() {
   const [weekOf, setWeekOf] = useState("");
   const [selectedPrompts, setSelectedPrompts] = useState({});
   const [customNote, setCustomNote] = useState("");
+  const [gradeEstimate, setGradeEstimate] = useState("");
+  const [customGrade, setCustomGrade] = useState("");
   const [openCategory, setOpenCategory] = useState(null);
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
@@ -440,6 +442,9 @@ function App() {
       lines.push(`✏️ Regarding homework and assignments, ${sName} ${homework.join("; and ")}.\n`);
     if (general.length > 0)
       lines.push(general.join(" ") + "\n");
+    const gradeDisplay = gradeEstimate === "other" ? customGrade.trim() : gradeEstimate;
+    if (gradeDisplay)
+      lines.push(`📊 Current Grade Estimate: ${gradeDisplay}\n`);
     if (customNote.trim())
       lines.push(`Additional note: ${customNote.trim()}\n`);
 
@@ -795,6 +800,38 @@ ${htmlParagraphs}
                   </div>
                 );
               })}
+            </section>
+
+            <section style={{ marginBottom: 28 }}>
+              <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 6 }}>
+                CURRENT GRADE ESTIMATE (optional)
+              </label>
+              <select
+                className="input-field"
+                value={gradeEstimate}
+                onChange={e => { setGradeEstimate(e.target.value); setCustomGrade(""); }}
+                style={{ marginBottom: gradeEstimate === "other" ? 10 : 0 }}
+              >
+                <option value="">— Select grade estimate —</option>
+                <option value="Between 90–100% (A)">Between 90–100% (A)</option>
+                <option value="Between 85–89% (B+)">Between 85–89% (B+)</option>
+                <option value="Between 80–84% (B)">Between 80–84% (B)</option>
+                <option value="Between 75–79% (C+)">Between 75–79% (C+)</option>
+                <option value="Between 70–74% (C)">Between 70–74% (C)</option>
+                <option value="Between 65–69% (D)">Between 65–69% (D)</option>
+                <option value="Borderline for passing — approaching 65%">Borderline for passing — approaching 65%</option>
+                <option value="Currently below 65% and in danger of failing">Currently below 65% and in danger of failing</option>
+                <option value="other">Other — enter manually</option>
+              </select>
+              {gradeEstimate === "other" && (
+                <input
+                  className="input-field"
+                  type="text"
+                  placeholder="e.g. 72%, Incomplete, pending make-up work..."
+                  value={customGrade}
+                  onChange={e => setCustomGrade(e.target.value)}
+                />
+              )}
             </section>
 
             <section style={{ marginBottom: 28 }}>
