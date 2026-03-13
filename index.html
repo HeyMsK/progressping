@@ -286,6 +286,178 @@ const CATEGORY_META = {
   general:                    { label: "💡 General Comments",                color: "#374151", bg: "#f3f4f6" },
 };
 
+const SUBJECT_PROMPTS = {
+  "📚 ELA": {
+    color: "#1b4965", bg: "#caf0f8",
+    strengths: [
+      "is demonstrating strong reading comprehension and makes meaningful connections to the text",
+      "writes with clarity, voice, and well-organized ideas",
+      "contributes thoughtful, text-based responses during class discussions",
+      "shows excellent command of grammar, punctuation, and sentence structure",
+      "is excelling in close reading and literary analysis",
+      "has shown remarkable growth in their writing craft this marking period",
+    ],
+    growth: [
+      "needs to provide more textual evidence to support their written arguments",
+      "reading assignments are not being completed consistently — this is impacting comprehension",
+      "written responses lack sufficient detail and development of ideas",
+      "would benefit from additional support with grammar and sentence construction",
+      "needs to slow down and revise written work more carefully before submitting",
+      "struggles to identify key themes and central ideas in complex texts",
+    ],
+  },
+  "🔢 Math": {
+    color: "#3d5a00", bg: "#ecfccb",
+    strengths: [
+      "demonstrates strong number sense and mathematical reasoning",
+      "is excelling in problem-solving and consistently shows their work clearly",
+      "has shown impressive growth in computation accuracy this marking period",
+      "applies mathematical concepts independently and with confidence",
+      "is a strong contributor during math discussions and collaborative problem-solving",
+      "demonstrates deep conceptual understanding beyond procedural computation",
+    ],
+    growth: [
+      "needs more practice with fractions, decimals, and operations",
+      "struggles to complete multi-step problems independently",
+      "is not consistently showing work — this makes it difficult to identify errors",
+      "would benefit from additional support with word problems and real-world applications",
+      "needs to review foundational skills that are impacting current unit performance",
+      "rushing through problems is leading to careless errors — slowing down will help",
+    ],
+  },
+  "🔬 Science": {
+    color: "#065f46", bg: "#d1fae5",
+    strengths: [
+      "approaches science with genuine curiosity and strong analytical thinking",
+      "lab work is detailed, accurate, and reflects careful scientific observation",
+      "demonstrates excellent understanding of current science concepts and vocabulary",
+      "asks insightful questions that show deep engagement with scientific content",
+      "excels at connecting science concepts to real-world phenomena",
+      "is a strong collaborative partner during lab activities and experiments",
+    ],
+    growth: [
+      "science assignments are being rushed — more care and detail are needed",
+      "needs to review key vocabulary and concepts from the current unit",
+      "lab reports require more precise observations and detailed data recording",
+      "needs to engage more actively during science discussions and experiments",
+      "would benefit from reviewing class notes and textbook readings at home",
+      "struggles to apply scientific reasoning to explain observations and results",
+    ],
+  },
+  "🌍 Social Studies": {
+    color: "#7c2d12", bg: "#fef3c7",
+    strengths: [
+      "demonstrates strong knowledge of current social studies content and historical context",
+      "makes impressive connections between historical events and present-day issues",
+      "written work reflects thorough research and well-developed arguments",
+      "participates thoughtfully in discussions about history, civics, and culture",
+      "shows exceptional skill in analyzing primary sources and historical evidence",
+      "brings diverse perspectives to class discussions — a real asset to the group",
+    ],
+    growth: [
+      "social studies work does not yet reflect adequate research or preparation",
+      "needs to strengthen the use of evidence and specific examples in written responses",
+      "would benefit from reviewing class notes and completing assigned readings consistently",
+      "struggles to connect historical events to broader themes and patterns",
+      "needs to engage more actively in class discussions and document-based activities",
+      "map skills and geographic literacy need additional practice and review",
+    ],
+  },
+  "🎨 The Arts": {
+    color: "#4a1e6e", bg: "#e9d8fd",
+    strengths: [
+      "demonstrates exceptional creativity, originality, and artistic vision",
+      "shows strong technical skill and intentional craft in their work",
+      "takes creative risks and pushes their practice in exciting new directions",
+      "approaches every project with focus, care, and genuine artistic investment",
+      "portfolio work reflects meaningful growth and a developing artistic voice",
+      "is an inspiring presence in the studio — leads by example through effort and enthusiasm",
+    ],
+    growth: [
+      "arts assignments are being submitted incomplete or without sufficient effort",
+      "needs to slow down and invest more time and intention in the creative process",
+      "would benefit from experimenting more and taking creative risks",
+      "technical skills need further development — extra practice and revision are encouraged",
+      "needs to engage more actively during critique and class discussion",
+      "is not using class time productively — studio focus needs significant improvement",
+    ],
+  },
+  "🎓 AP": {
+    color: "#1e3a5f", bg: "#dbeafe",
+    strengths: [
+      "is performing at a high level and demonstrates true college-readiness in this AP course",
+      "written work reflects sophisticated analysis, strong argumentation, and original thinking",
+      "consistently engages with complex texts, data, and primary sources at an exceptional level",
+      "is well-prepared for the AP exam and demonstrates mastery of course concepts",
+      "takes intellectual risks and contributes insights that elevate the entire class discussion",
+      "manages the rigor and workload of this AP course with impressive maturity and discipline",
+    ],
+    growth: [
+      "needs to strengthen thesis development and the use of evidence in extended responses",
+      "AP-level reading and annotation skills need more consistent practice and depth",
+      "would benefit from additional exam preparation — practice free-response questions are strongly encouraged",
+      "needs to engage more deeply with course content beyond surface-level understanding",
+      "time management and meeting AP assignment deadlines require immediate attention",
+      "struggles to sustain the pace and rigor expected in this AP course — extra help is recommended",
+    ],
+  },
+  "🌐 ENL": {
+    color: "#065f46", bg: "#d1fae5",
+    strengths: [
+      "is making impressive strides in English language acquisition and communication",
+      "demonstrates growing confidence in speaking, reading, and writing in English",
+      "actively participates in class and makes excellent use of language supports and scaffolds",
+      "vocabulary development is strong — applies new academic language with increasing accuracy",
+      "writing in English is becoming more organized, detailed, and expressive",
+      "shows remarkable perseverance and a genuine commitment to language learning",
+    ],
+    growth: [
+      "needs additional support building academic English vocabulary across content areas",
+      "reading comprehension in English requires continued scaffolding and practice",
+      "would benefit from more structured opportunities to practice speaking and listening in English",
+      "written English needs further development — sentence structure and grammar support are recommended",
+      "needs encouragement to take more risks using English during class discussions",
+      "additional home practice with English reading and vocabulary will accelerate growth significantly",
+    ],
+  },
+  "💡 SpEd": {
+    color: "#4a1e6e", bg: "#ede9fe",
+    strengths: [
+      "is making meaningful progress toward their IEP goals this marking period",
+      "demonstrates strong self-advocacy and uses accommodations effectively and independently",
+      "shows impressive growth in the areas targeted by their individualized learning plan",
+      "is building confidence and independence in a way that is genuinely exciting to observe",
+      "responds exceptionally well to support strategies and applies them with consistency",
+      "the progress made this period reflects real dedication — we are proud of this growth",
+    ],
+    growth: [
+      "additional support is needed to make progress toward current IEP goals",
+      "would benefit from more consistent use of provided accommodations and supports",
+      "a check-in meeting with the IEP team may be helpful to review current supports and strategies",
+      "needs encouragement to self-advocate and ask for help when needed",
+      "transitions between tasks and activities continue to be an area requiring additional support",
+      "we recommend continued collaboration between home and school to reinforce strategies consistently",
+    ],
+  },
+  "🔵 General": {
+    color: "#374151", bg: "#f3f4f6",
+    strengths: [
+      "is having an excellent week across all subject areas",
+      "demonstrates strong cross-curricular skills and a love of learning",
+      "brings consistent effort and a positive attitude to every class",
+      "is a pleasure to work with — engaged, focused, and always prepared",
+      "shows impressive growth that reflects dedication both in and out of school",
+    ],
+    growth: [
+      "would benefit from additional support across multiple subject areas",
+      "extra help sessions are strongly recommended to build confidence and skills",
+      "needs to bring greater focus and effort across all classes",
+      "organizational skills — including materials, assignments, and deadlines — need attention",
+      "a parent-teacher conference would be helpful to discuss a support plan",
+    ],
+  },
+};
+
 const SUBJECTS = {
   "🟡 ELEMENTARY SCHOOL": {
     "── Core Subjects ──": [
@@ -447,6 +619,8 @@ function App() {
   const [studentLastInitial, setStudentLastInitial] = useState("");
   const [weekOf, setWeekOf] = useState("");
   const [selectedPrompts, setSelectedPrompts] = useState({});
+  const [activeSubject, setActiveSubject] = useState(null);
+  const [selectedSubjectPrompts, setSelectedSubjectPrompts] = useState([]);
   const [customNote, setCustomNote] = useState("");
   const [gradeEstimate, setGradeEstimate] = useState("");
   const [customGrade, setCustomGrade] = useState("");
@@ -492,6 +666,8 @@ function App() {
     const homework     = [...(selectedPrompts["positive_homework"] || []),          ...(selectedPrompts["needs_support_homework"] || [])];
     const general      = selectedPrompts["general"] || [];
 
+    if (selectedSubjectPrompts.length > 0)
+      lines.push(`${activeSubject ? activeSubject + " — " : ""}${sName} ${selectedSubjectPrompts.join("; and ")}.\n`);
     if (academic.length > 0)
       lines.push(`📚 Academically, ${sName} ${academic.join("; and ")}.\n`);
     if (participation.length > 0)
@@ -867,6 +1043,72 @@ ${htmlParagraphs}
               <p style={{ color: "#6b7280", fontSize: 14, marginTop: -8, marginBottom: 16 }}>
                 Click any category to expand it, then select all prompts that apply to this student.
               </p>
+
+              {/* Subject-Specific Prompts Section */}
+              <div style={{ marginBottom: 24, border: "2px solid #e0e7ff", borderRadius: 14, padding: "18px 20px", background: "linear-gradient(135deg, #f0fdfa, #f5f3ff)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>Subject-Specific Prompts</span>
+                  <span style={{ fontSize: 11, background: "#ede9fe", color: "#7c3aed", padding: "2px 8px", borderRadius: 99, fontWeight: 700 }}>NEW</span>
+                </div>
+                <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 14px 0" }}>Optional — pick your subject for targeted prompts, then combine with categories below.</p>
+                {/* Subject tabs */}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+                  {Object.keys(SUBJECT_PROMPTS).map(subj => (
+                    <button key={subj} onClick={() => setActiveSubject(activeSubject === subj ? null : subj)}
+                      style={{ padding: "6px 14px", borderRadius: 999, fontSize: 13, cursor: "pointer", fontFamily: "'Source Serif 4', serif",
+                        border: activeSubject === subj ? "none" : "2px solid #e5e7eb",
+                        background: activeSubject === subj ? "linear-gradient(135deg, #0e7490, #7c3aed)" : "white",
+                        color: activeSubject === subj ? "white" : "#374151",
+                        fontWeight: activeSubject === subj ? 700 : 400,
+                        transition: "all 0.15s",
+                      }}>{subj}</button>
+                  ))}
+                </div>
+                {/* Prompts for active subject */}
+                {activeSubject && (() => {
+                  const subj = SUBJECT_PROMPTS[activeSubject];
+                  return (
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: subj.color, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>✅ Strengths</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+                        {subj.strengths.map((p, i) => {
+                          const sel = selectedSubjectPrompts.includes(p);
+                          return (
+                            <button key={i} onClick={() => setSelectedSubjectPrompts(prev => sel ? prev.filter(x => x !== p) : [...prev, p])}
+                              className="prompt-btn" style={{ textAlign: "left",
+                                borderColor: sel ? subj.color : "transparent",
+                                background: sel ? subj.bg : "#f9fafb",
+                                color: sel ? subj.color : "#374151",
+                                fontWeight: sel ? 700 : 400,
+                              }}>{sel ? "✓ " : ""}{p}</button>
+                          );
+                        })}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#7c2d12", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>📈 Areas for Growth</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {subj.growth.map((p, i) => {
+                          const sel = selectedSubjectPrompts.includes(p);
+                          return (
+                            <button key={i} onClick={() => setSelectedSubjectPrompts(prev => sel ? prev.filter(x => x !== p) : [...prev, p])}
+                              className="prompt-btn" style={{ textAlign: "left",
+                                borderColor: sel ? "#7c2d12" : "transparent",
+                                background: sel ? "#ffe8d6" : "#f9fafb",
+                                color: sel ? "#7c2d12" : "#374151",
+                                fontWeight: sel ? 700 : 400,
+                              }}>{sel ? "✓ " : ""}{p}</button>
+                          );
+                        })}
+                      </div>
+                      {selectedSubjectPrompts.length > 0 && (
+                        <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: 12, color: "#7c3aed", fontWeight: 700 }}>{selectedSubjectPrompts.length} subject prompt{selectedSubjectPrompts.length > 1 ? "s" : ""} selected</span>
+                          <button onClick={() => setSelectedSubjectPrompts([])} style={{ fontSize: 12, color: "#9ca3af", background: "none", border: "none", cursor: "pointer" }}>Clear</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
 
               {Object.entries(CATEGORY_META).filter(([key, meta]) => {
 
