@@ -631,6 +631,203 @@ const SUBJECT_PROMPTS = {
 };
 
 
+const LANGUAGES = {
+  en: { label: "English", flag: "🇺🇸" },
+  es: { label: "Español", flag: "🇪🇸" },
+  zh: { label: "中文", flag: "🇨🇳" },
+  bn: { label: "বাংলা", flag: "🇧🇩" },
+  fr: { label: "Français/Créole", flag: "🇭🇹" },
+  ru: { label: "Русский", flag: "🇷🇺" },
+  uk: { label: "Українська", flag: "🇺🇦" },
+  ja: { label: "日本語", flag: "🇯🇵" },
+  hi: { label: "हिन्दी", flag: "🇮🇳" },
+  ar: { label: "العربية", flag: "🇸🇦" },
+};
+
+const TRANSLATIONS = {
+  en: {
+    greeting: "Dear Parent/Guardian,",
+    intro_weekly: "This is a weekly progress report to let you know how",
+    intro_daily: "This is a daily progress update to let you know how",
+    intro_mp: "This is a marking period progress report to let you know how",
+    intro_mid: "is doing",
+    intro_end: "in",
+    intro_tail: "We value your partnership in their education and want to keep you informed of their progress.",
+    academic: "Academically,",
+    participation: "In terms of class participation,",
+    behavior: "Regarding behavior and social-emotional growth,",
+    attendance: "Attendance note:",
+    homework: "Regarding homework and assignments,",
+    grade_est: "Current Grade Estimate:",
+    add_note: "Additional note:",
+    closing: "Thank you for your continued support. Please don't hesitate to reach out with any questions.",
+    regards: "Warm regards,",
+  },
+  es: {
+    greeting: "Estimado padre/tutor,",
+    intro_weekly: "Este es un informe de progreso semanal para informarle cómo",
+    intro_daily: "Esta es una actualización de progreso diaria para informarle cómo",
+    intro_mp: "Este es un informe de progreso del período de calificaciones para informarle cómo",
+    intro_mid: "se está desempeñando",
+    intro_end: "en",
+    intro_tail: "Valoramos su colaboración en la educación de su hijo/a y queremos mantenerle informado/a sobre su progreso.",
+    academic: "Académicamente,",
+    participation: "En cuanto a la participación en clase,",
+    behavior: "En cuanto al comportamiento y desarrollo socioemocional,",
+    attendance: "Nota de asistencia:",
+    homework: "En cuanto a tareas y asignaciones,",
+    grade_est: "Estimación de calificación actual:",
+    add_note: "Nota adicional:",
+    closing: "Gracias por su continuo apoyo. No dude en comunicarse si tiene preguntas.",
+    regards: "Atentamente,",
+  },
+  zh: {
+    greeting: "尊敬的家长/监护人，",
+    intro_weekly: "这是一份每周进度报告，向您汇报",
+    intro_daily: "这是一份每日进度更新，向您汇报",
+    intro_mp: "这是一份评分期进度报告，向您汇报",
+    intro_mid: "目前在",
+    intro_end: "课堂中的表现情况",
+    intro_tail: "我们重视您在子女教育中的参与，希望持续向您通报学习进展。",
+    academic: "在学业方面，",
+    participation: "在课堂参与方面，",
+    behavior: "在行为及社会情感发展方面，",
+    attendance: "出勤记录：",
+    homework: "在作业及课业完成方面，",
+    grade_est: "当前成绩估计：",
+    add_note: "附加说明：",
+    closing: "感谢您一如既往的支持，如有任何问题，请随时与我们联系。",
+    regards: "此致，",
+  },
+  bn: {
+    greeting: "প্রিয় অভিভাবক,",
+    intro_weekly: "এটি একটি সাপ্তাহিক অগ্রগতি প্রতিবেদন, জানাতে চাই যে",
+    intro_daily: "এটি একটি দৈনিক অগ্রগতি আপডেট, জানাতে চাই যে",
+    intro_mp: "এটি একটি মার্কিং পিরিয়ড অগ্রগতি প্রতিবেদন, জানাতে চাই যে",
+    intro_mid: "এই সপ্তাহে",
+    intro_end: "ক্লাসে কেমন করছে",
+    intro_tail: "আমরা আপনার সন্তানের শিক্ষায় আপনার অংশীদারিত্বকে মূল্য দিই এবং তাদের অগ্রগতি সম্পর্কে আপনাকে অবহিত রাখতে চাই।",
+    academic: "একাডেমিকভাবে,",
+    participation: "ক্লাসে অংশগ্রহণের ক্ষেত্রে,",
+    behavior: "আচরণ ও সামাজিক-আবেগীয় বিকাশের ক্ষেত্রে,",
+    attendance: "উপস্থিতি নোট:",
+    homework: "হোমওয়ার্ক ও অ্যাসাইনমেন্টের ক্ষেত্রে,",
+    grade_est: "বর্তমান গ্রেড অনুমান:",
+    add_note: "অতিরিক্ত নোট:",
+    closing: "আপনার অব্যাহত সমর্থনের জন্য ধন্যবাদ। কোনো প্রশ্ন থাকলে নির্দ্বিধায় যোগাযোগ করুন।",
+    regards: "শুভেচ্ছায়,",
+  },
+  fr: {
+    greeting: "Cher parent/tuteur,",
+    intro_weekly: "Voici un rapport de progrès hebdomadaire pour vous informer de la situation de",
+    intro_daily: "Voici une mise à jour quotidienne du progrès pour vous informer de la situation de",
+    intro_mp: "Voici un rapport de progrès de période de notation pour vous informer de la situation de",
+    intro_mid: "cette semaine dans",
+    intro_end: "",
+    intro_tail: "Nous valorisons votre partenariat dans l'éducation de votre enfant et souhaitons vous tenir informé(e) de ses progrès.",
+    academic: "Sur le plan académique,",
+    participation: "En ce qui concerne la participation en classe,",
+    behavior: "En ce qui concerne le comportement et le développement socio-émotionnel,",
+    attendance: "Note de présence :",
+    homework: "En ce qui concerne les devoirs et les travaux,",
+    grade_est: "Estimation de la note actuelle :",
+    add_note: "Note supplémentaire :",
+    closing: "Merci pour votre soutien continu. N'hésitez pas à nous contacter si vous avez des questions.",
+    regards: "Cordialement,",
+  },
+  ru: {
+    greeting: "Уважаемый родитель/опекун,",
+    intro_weekly: "Это еженедельный отчёт об успеваемости. Сообщаем вам, что",
+    intro_daily: "Это ежедневный отчёт об успеваемости. Сообщаем вам, что",
+    intro_mp: "Это отчёт об успеваемости за четверть. Сообщаем вам, что",
+    intro_mid: "на этой неделе в классе",
+    intro_end: "",
+    intro_tail: "Мы ценим ваше участие в образовании вашего ребёнка и хотим держать вас в курсе его успехов.",
+    academic: "В академическом плане,",
+    participation: "В отношении участия в классе,",
+    behavior: "В отношении поведения и социально-эмоционального развития,",
+    attendance: "Примечание об посещаемости:",
+    homework: "В отношении домашних заданий и учебных работ,",
+    grade_est: "Текущая оценка (приблизительно):",
+    add_note: "Дополнительная заметка:",
+    closing: "Спасибо за вашу поддержку. Не стесняйтесь обращаться к нам с любыми вопросами.",
+    regards: "С уважением,",
+  },
+  uk: {
+    greeting: "Шановний батьку/опікуне,",
+    intro_weekly: "Це щотижневий звіт про успішність. Повідомляємо вас, що",
+    intro_daily: "Це щоденний звіт про успішність. Повідомляємо вас, що",
+    intro_mp: "Це звіт про успішність за чверть. Повідомляємо вас, що",
+    intro_mid: "цього тижня у класі",
+    intro_end: "",
+    intro_tail: "Ми цінуємо вашу участь у навчанні вашої дитини та хочемо тримати вас у курсі її прогресу.",
+    academic: "В академічному плані,",
+    participation: "Щодо участі у класі,",
+    behavior: "Щодо поведінки та соціально-емоційного розвитку,",
+    attendance: "Примітка про відвідуваність:",
+    homework: "Щодо домашніх завдань і навчальних робіт,",
+    grade_est: "Поточна оцінка (приблизно):",
+    add_note: "Додаткова нотатка:",
+    closing: "Дякуємо за вашу підтримку. Не соромтеся звертатися до нас з будь-якими питаннями.",
+    regards: "З повагою,",
+  },
+  ja: {
+    greeting: "保護者の皆様へ、",
+    intro_weekly: "今週の学習進捗報告をお送りします。",
+    intro_daily: "本日の学習進捗をお知らせします。",
+    intro_mp: "評価期間の学習進捗報告をお送りします。",
+    intro_mid: "お子様は",
+    intro_end: "のクラスで以下のような状況です。",
+    intro_tail: "保護者の皆様のご協力に感謝申し上げます。お子様の進捗を随時お知らせいたします。",
+    academic: "学習面では、",
+    participation: "授業への参加については、",
+    behavior: "行動および社会的・情緒的発達については、",
+    attendance: "出席状況：",
+    homework: "宿題・課題については、",
+    grade_est: "現在の成績（目安）：",
+    add_note: "追記：",
+    closing: "引き続きのご支援をありがとうございます。ご質問があればいつでもお気軽にお問い合わせください。",
+    regards: "敬具、",
+  },
+  hi: {
+    greeting: "प्रिय माता-पिता/अभिभावक,",
+    intro_weekly: "यह एक साप्ताहिक प्रगति रिपोर्ट है, जिसमें हम आपको बताना चाहते हैं कि",
+    intro_daily: "यह एक दैनिक प्रगति अपडेट है, जिसमें हम आपको बताना चाहते हैं कि",
+    intro_mp: "यह एक मार्किंग पीरियड प्रगति रिपोर्ट है, जिसमें हम आपको बताना चाहते हैं कि",
+    intro_mid: "इस सप्ताह",
+    intro_end: "कक्षा में कैसा कर रहे हैं",
+    intro_tail: "हम आपके बच्चे की शिक्षा में आपकी भागीदारी को महत्व देते हैं और उनकी प्रगति के बारे में आपको सूचित रखना चाहते हैं।",
+    academic: "शैक्षणिक दृष्टि से,",
+    participation: "कक्षा में भागीदारी के संदर्भ में,",
+    behavior: "व्यवहार और सामाजिक-भावनात्मक विकास के संदर्भ में,",
+    attendance: "उपस्थिति नोट:",
+    homework: "गृहकार्य और असाइनमेंट के संदर्भ में,",
+    grade_est: "वर्तमान ग्रेड अनुमान:",
+    add_note: "अतिरिक्त नोट:",
+    closing: "आपके निरंतर समर्थन के लिए धन्यवाद। कोई भी प्रश्न हो तो कृपया संपर्क करें।",
+    regards: "सादर,",
+  },
+  ar: {
+    greeting: "ولي الأمر العزيز،",
+    intro_weekly: "هذا تقرير تقدم أسبوعي لإطلاعكم على أداء",
+    intro_daily: "هذا تحديث تقدم يومي لإطلاعكم على أداء",
+    intro_mp: "هذا تقرير تقدم لفترة التقييم لإطلاعكم على أداء",
+    intro_mid: "هذا الأسبوع في",
+    intro_end: "",
+    intro_tail: "نحن نقدّر شراكتكم في تعليم طفلكم ونسعى إلى إبقائكم على اطلاع دائم بتقدمه.",
+    academic: "على الصعيد الأكاديمي،",
+    participation: "فيما يتعلق بالمشاركة في الفصل،",
+    behavior: "فيما يتعلق بالسلوك والنمو الاجتماعي والعاطفي،",
+    attendance: "ملاحظة الحضور:",
+    homework: "فيما يتعلق بالواجبات المنزلية والمهام،",
+    grade_est: "تقدير الدرجة الحالية:",
+    add_note: "ملاحظة إضافية:",
+    closing: "شكرًا على دعمكم المستمر. لا تترددوا في التواصل معنا إذا كان لديكم أي استفسار.",
+    regards: "مع خالص التقدير،",
+  },
+};
+
+
 function App() {
   const [step, setStep] = useState("form");
   const [reportFrequency, setReportFrequency] = useState("weekly");
@@ -641,6 +838,11 @@ function App() {
   const [gradeLevel, setGradeLevel] = useState("");
   const [className, setClassName] = useState("");
   const [nameBlank, setNameBlank] = useState(false);
+  const [reportLang, setReportLang] = useState("en");
+  const [translatedReport, setTranslatedReport] = useState("");
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translateLang, setTranslateLang] = useState("");
+  const [translateError, setTranslateError] = useState("");
   const [studentGradeLevel, setStudentGradeLevel] = useState("");
   const [weekOf, setWeekOf] = useState("");
   const [selectedPrompts, setSelectedPrompts] = useState({});
@@ -669,7 +871,10 @@ function App() {
 
   const generateReport = () => {
     const lines = [];
-    const sName = nameBlank ? "your child, _______________," : "your child";
+    // sName: first use says "your child, ___" — rest just say "___"
+    const blank = "_______________";
+    const sNameFirst = nameBlank ? `your child, ${blank},` : "your child";
+    const sName = nameBlank ? blank : "your child";
     const schoolName2 = schoolName.trim() || "";
     const tName = teacherName.trim() || "Your Child's Teacher";
     const cName = className.trim() || "our class";
@@ -680,8 +885,10 @@ function App() {
     const periodWord = isDaily ? "today" : isMarkingPeriod ? "this marking period" : "this week";
     const reportTypeLabel = isDaily ? "daily progress update" : isMarkingPeriod ? "marking period progress report" : "weekly progress report";
 
-    lines.push(`Dear Parent/Guardian,\n`);
-    lines.push(`This is a ${reportTypeLabel} to let you know how ${sName} is doing ${periodWord} in ${cName}. We value your partnership in their education and want to keep you informed of their progress.\n`);
+    const T = TRANSLATIONS[reportLang] || TRANSLATIONS.en;
+    lines.push(`${T.greeting}\n`);
+    const introType = isDaily ? T.intro_daily : isMarkingPeriod ? T.intro_mp : T.intro_weekly;
+    lines.push(`${introType} ${sNameFirst} ${T.intro_mid} ${cName}${T.intro_end ? " " + T.intro_end : ""}. ${T.intro_tail}\n`);
 
     const academic     = [...(selectedPrompts["positive_academic"] || []),          ...(selectedPrompts["needs_support_academic"] || [])];
     const participation= [...(selectedPrompts["positive_participation"] || []),     ...(selectedPrompts["needs_support_participation"] || [])];
@@ -693,29 +900,29 @@ function App() {
     if (selectedSubjectPrompts.length > 0)
       lines.push(`${activeSubject ? activeSubject + " — " : ""}${sName} ${selectedSubjectPrompts.join("; and ")}.\n`);
     if (academic.length > 0)
-      lines.push(`📚 Academically, ${sName} ${academic.join("; and ")}.\n`);
+      lines.push(`📚 ${T.academic} ${sName} ${academic.join("; and ")}.\n`);
     if (participation.length > 0)
-      lines.push(`🙋 In terms of class participation, ${sName} ${participation.join("; and ")}.\n`);
+      lines.push(`🙋 ${T.participation} ${sName} ${participation.join("; and ")}.\n`);
     if (behavior.length > 0)
-      lines.push(`⭐ Regarding behavior and social-emotional growth, ${sName} ${behavior.join("; and ")}.\n`);
+      lines.push(`⭐ ${T.behavior} ${sName} ${behavior.join("; and ")}.\n`);
     if (attendance.length > 0)
-      lines.push(`📅 Attendance note: ${sName} ${attendance.join("; ")}.\n`);
+      lines.push(`📅 ${T.attendance} ${sName} ${attendance.join("; ")}.\n`);
     if (homework.length > 0)
-      lines.push(`✏️ Regarding homework and assignments, ${sName} ${homework.join("; and ")}.\n`);
+      lines.push(`✏️ ${T.homework} ${sName} ${homework.join("; and ")}.\n`);
     if (general.length > 0)
       lines.push(general.join(" ") + "\n");
     const gradeDisplay = gradeEstimate === "other" ? customGrade.trim() : gradeEstimate;
     if (gradeDisplay)
-      lines.push(`📊 Current Grade Estimate: ${gradeDisplay}\n`);
+      lines.push(`📊 ${T.grade_est} ${gradeDisplay}\n`);
     if (customNote.trim())
-      lines.push(`Additional note: ${customNote.trim()}\n`);
+      lines.push(`${T.add_note} ${customNote.trim()}\n`);
 
-    lines.push(`Thank you for your continued support. Please don't hesitate to reach out with any questions.\n`);
+    lines.push(`${T.closing}\n`);
     const termLabel = isMarkingPeriod
       ? (["Mid-Year","End of Year"].includes(termType) ? termType : termType === "Custom" ? weekOf : `${termType}${weekOf ? " " + weekOf : ""}`)
       : wOf;
     const mpDate = markingPeriodDate ? new Date(markingPeriodDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "";
-    lines.push(`Warm regards,\n${tName}\n${cName}${schoolName2 ? "\n" + schoolName2 : ""}${studentGradeLevel ? "\nStudent Grade: " + studentGradeLevel : ""}${termLabel ? "\n" + (isMarkingPeriod ? "Term" : isDaily ? "Date" : "Week of") + ": " + termLabel : ""}${isMarkingPeriod && mpDate ? "\nDate Sent: " + mpDate : ""}`);
+    lines.push(`${T.regards}\n${tName}\n${cName}${schoolName2 ? "\n" + schoolName2 : ""}${studentGradeLevel ? "\nStudent Grade: " + studentGradeLevel : ""}${termLabel ? "\n" + (isMarkingPeriod ? "Term" : isDaily ? "Date" : "Week of") + ": " + termLabel : ""}${isMarkingPeriod && mpDate ? "\nDate Sent: " + mpDate : ""}`);
 
     return lines.join("\n");
   };
@@ -730,7 +937,7 @@ function App() {
   const [parentPhone, setParentPhone] = useState("");
 
   const getNames = () => {
-    const sName = nameBlank ? "your child, _______________," : "your child";
+    const sName = nameBlank ? "_______________" : "your child";
     const tName = teacherName.trim() || "Teacher";
     const cName = className.trim() || "Class";
     const sName2 = schoolName.trim() || "";
@@ -812,6 +1019,42 @@ ${htmlParagraphs}
     setTimeout(() => setDownloaded(false), 3000);
   };
 
+
+
+  const handleTranslate = async (targetLang) => {
+    if (!targetLang) return;
+    setIsTranslating(true);
+    setTranslateError("");
+    setTranslateLang(targetLang);
+    const langNames = {
+      es: "Spanish",
+      zh: "Mandarin Chinese",
+      bn: "Bengali",
+      fr: "French (Haitian Creole style where appropriate)",
+      ru: "Russian",
+      uk: "Ukrainian",
+      ja: "Japanese",
+      hi: "Hindi",
+      ar: "Arabic",
+    };
+    const langName = langNames[targetLang] || targetLang;
+    try {
+      const response = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ report, targetLang, langName }),
+      });
+      const data = await response.json();
+      if (data.translated) {
+        setTranslatedReport(data.translated);
+      } else {
+        setTranslateError(data.error || "Translation failed. Please try again.");
+      }
+    } catch (err) {
+      setTranslateError("Translation failed. Please try again.");
+    }
+    setIsTranslating(false);
+  };
 
   return (
     <div style={{
@@ -1011,7 +1254,7 @@ ${htmlParagraphs}
                   <input className="input-field" placeholder="e.g. Ms. Johnson" value={teacherName} onChange={e => setTeacherName(e.target.value)} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>GRADE LEVEL & SUBJECT</label>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>GRADE LEVEL &amp; SUBJECT</label>
                   <select
                     className="input-field"
                     value={gradeLevel}
@@ -1326,7 +1569,85 @@ ${htmlParagraphs}
               >
                 {downloaded ? "✓ Downloading!" : "📄 Download .doc"}
               </button>
+              <button
+                className="action-btn"
+                style={{ background: exportPanel === "translate" ? "linear-gradient(135deg,#0e7490,#0891b2)" : "linear-gradient(135deg,#0891b2,#0e7490)" }}
+                onClick={() => setExportPanel(exportPanel === "translate" ? null : "translate")}
+              >
+                🌐 {exportPanel === "translate" ? "Hide Translate" : "Translate Report"}
+              </button>
             </div>
+
+            {/* Translation Panel */}
+            {exportPanel === "translate" && (
+              <div style={{ marginTop: 14, padding: 20, background: "#f0fdfa", borderRadius: 12, border: "1px solid #99f6e4" }}>
+                <p style={{ margin: "0 0 4px 0", fontWeight: 700, fontSize: 15, color: "#0e7490", fontFamily: "'Source Serif 4', serif" }}>
+                  🌐 Translate Full Report
+                </p>
+                <p style={{ margin: "0 0 14px 0", fontSize: 13, color: "#6b7280" }}>
+                  Translates the entire report — including all prompt content — into professional educator language.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                  {[
+                    {code:"es", label:"🇪🇸 Spanish / Español"},
+                    {code:"zh", label:"🇨🇳 Chinese / 中文"},
+                    {code:"bn", label:"🇧🇩 Bengali / বাংলা"},
+                    {code:"fr", label:"🇭🇹 French / Haitian Creole"},
+                    {code:"ru", label:"🇷🇺 Russian / Русский"},
+                    {code:"uk", label:"🇺🇦 Ukrainian / Українська"},
+                    {code:"ja", label:"🇯🇵 Japanese / 日本語"},
+                    {code:"hi", label:"🇮🇳 Hindi / हिन्दी"},
+                    {code:"ar", label:"🇸🇦 Arabic / العربية"},
+                  ].map(({code, label}) => (
+                    <button key={code}
+                      onClick={() => { setTranslatedReport(""); handleTranslate(code); }}
+                      disabled={isTranslating}
+                      style={{
+                        padding: "8px 14px", borderRadius: 999, fontSize: 13,
+                        cursor: isTranslating ? "not-allowed" : "pointer",
+                        border: translateLang === code && translatedReport ? "none" : "2px solid #99f6e4",
+                        background: translateLang === code && translatedReport ? "linear-gradient(135deg,#0e7490,#7c3aed)" : "white",
+                        color: translateLang === code && translatedReport ? "white" : "#374151",
+                        fontFamily: "'Source Serif 4', serif", fontWeight: 500,
+                        opacity: isTranslating ? 0.6 : 1,
+                        transition: "all 0.15s",
+                      }}
+                    >{label}</button>
+                  ))}
+                </div>
+
+                {isTranslating && (
+                  <div style={{ textAlign: "center", padding: "20px 0", color: "#0e7490", fontSize: 14, fontWeight: 600 }}>
+                    <span style={{ display: "inline-block", animation: "spin 1s linear infinite", marginRight: 8 }}>⏳</span>
+                    Translating your report...
+                  </div>
+                )}
+
+                {translateError && (
+                  <div style={{ padding: "10px 14px", background: "#fef2f2", borderRadius: 8, color: "#b91c1c", fontSize: 13, marginBottom: 12 }}>
+                    ⚠️ {translateError}
+                  </div>
+                )}
+
+                {translatedReport && !isTranslating && (
+                  <div>
+                    <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 10, padding: 20, fontSize: 14, lineHeight: 1.85, color: "#1f2937", whiteSpace: "pre-wrap", marginBottom: 12, fontFamily: "'Source Serif 4', serif" }}>
+                      {translatedReport}
+                    </div>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(translatedReport); }}
+                        style={{ padding: "10px 20px", border: "none", borderRadius: 8, background: "linear-gradient(135deg,#4c1d95,#7c3aed)", color: "white", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Source Serif 4', serif" }}
+                      >📋 Copy Translated Report</button>
+                      <button
+                        onClick={() => { setTranslatedReport(""); setTranslateLang(""); }}
+                        style={{ padding: "10px 20px", border: "2px solid #e5e7eb", borderRadius: 8, background: "white", color: "#374151", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "'Source Serif 4', serif" }}
+                      >↩ Clear</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Email Panel */}
             {exportPanel === "email" && (() => {
