@@ -1884,32 +1884,29 @@ ${htmlParagraphs}
                           }
                         }}
                       >📋 Select &amp; Copy</button>
-                      <a
-                        href="https://docs.google.com/document/create"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
                         onClick={() => {
                           const text = editedReport || report;
-                          if (navigator.clipboard && navigator.clipboard.writeText) {
-                            navigator.clipboard.writeText(text).catch(() => {
+                          const copyText = (t) => {
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard.writeText(t).catch(() => {
+                                const ta = document.createElement("textarea");
+                                ta.value = t; document.body.appendChild(ta);
+                                ta.select(); document.execCommand("copy");
+                                document.body.removeChild(ta);
+                              });
+                            } else {
                               const ta = document.createElement("textarea");
-                              ta.value = text;
-                              document.body.appendChild(ta);
-                              ta.select();
-                              document.execCommand("copy");
+                              ta.value = t; document.body.appendChild(ta);
+                              ta.select(); document.execCommand("copy");
                               document.body.removeChild(ta);
-                            });
-                          } else {
-                            const ta = document.createElement("textarea");
-                            ta.value = text;
-                            document.body.appendChild(ta);
-                            ta.select();
-                            document.execCommand("copy");
-                            document.body.removeChild(ta);
-                          }
+                            }
+                          };
+                          copyText(text);
+                          window.open("https://docs.new", "_blank");
                         }}
-                        style={{ padding: "7px 14px", background: "white", color: "#3b0764", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 700, fontSize: 13, textDecoration: "none" }}
-                      >🗂 Open Google Docs</a>
+                        style={{ padding: "7px 14px", background: "white", color: "#3b0764", border: "2px solid #3b0764", borderRadius: 6, cursor: "pointer", fontWeight: 700, fontSize: 13 }}
+                      >🗂 Open Google Docs</button>
                     </div>
                   </div>
                   {/* Hint */}
