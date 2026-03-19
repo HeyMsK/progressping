@@ -843,6 +843,7 @@ function App() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [translateLang, setTranslateLang] = useState("");
   const [translateError, setTranslateError] = useState("");
+  const [editedReport, setEditedReport] = useState("");
   const [studentGradeLevel, setStudentGradeLevel] = useState("");
   const [weekOf, setWeekOf] = useState("");
   const [selectedPrompts, setSelectedPrompts] = useState({});
@@ -949,7 +950,7 @@ function App() {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(report);
+    navigator.clipboard.writeText(editedReport || report);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -980,7 +981,7 @@ function App() {
       ? `GradeRelay – Progress Report – ${wOf}`
       : `GradeRelay – Progress Report – Week of ${wOf}`;
 
-    const htmlParagraphs = report
+    const htmlParagraphs = (editedReport || report)
       .split("\n")
       .map(line => {
         const escaped = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -1042,7 +1043,7 @@ ${htmlParagraphs}
       const response = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ report, targetLang, langName }),
+        body: JSON.stringify({ report: editedReport || report, targetLang, langName }),
       });
       const data = await response.json();
       if (data.translated) {
@@ -1508,7 +1509,7 @@ ${htmlParagraphs}
             </section>
 
             <div style={{ textAlign: "center" }}>
-              <button className="primary-btn" onClick={() => setStep("preview")}>
+              <button className="primary-btn" onClick={() => { setEditedReport(generateReport()); setStep("preview"); }}>
                 Generate Progress Report →
               </button>
             </div>
@@ -1530,7 +1531,19 @@ ${htmlParagraphs}
               <button className="secondary-btn" onClick={() => setStep("form")}>← Edit</button>
             </div>
 
-            <div className="report-box">{report}</div>
+            <div style={{ marginBottom: 6, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 12, color: "#6b7280", fontStyle: "italic" }}>✏️ Click anywhere in the report to make edits before sending</span>
+              <button onClick={() => setEditedReport(generateReport())}
+                style={{ fontSize: 11, color: "#7c3aed", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+                ↩ Reset to original
+              </button>
+            </div>
+            <textarea
+              className="report-box"
+              value={editedReport}
+              onChange={e => setEditedReport(e.target.value)}
+              style={{ width: "100%", minHeight: 320, resize: "vertical", cursor: "text", boxSizing: "border-box" }}
+            />
 
 {/* Action buttons */}
             <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -1655,7 +1668,7 @@ ${htmlParagraphs}
               const subject = isDaily
                 ? `Daily Progress Update – ${sName} – ${cName} – ${wOf}`
                 : `Weekly Progress Report – ${sName} – ${cName} – Week of ${wOf}`;
-              const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(report)}`;
+              const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(editedReport || report)}`;
               return (
                 <div style={{ marginTop: 14, padding: 18, background: "#f5f3ff", borderRadius: 12, border: "1px solid #ddd6fe" }}>
                   <p style={{ margin: "0 0 10px 0", fontWeight: 700, fontSize: 14, color: "#5b21b6", fontFamily: "'Source Serif 4', serif" }}>
@@ -1748,7 +1761,7 @@ ${htmlParagraphs}
                             document.execCommand("copy");
                             window.getSelection().removeAllRanges();
                           } else {
-                            navigator.clipboard.writeText(report);
+                            navigator.clipboard.writeText(editedReport || report);
                           }
                         }}
                       >📋 Select &amp; Copy</button>
