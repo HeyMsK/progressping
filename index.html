@@ -1248,7 +1248,7 @@ ${htmlParagraphs}
                 </div>
                 <div>
                   <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>SCHOOL NAME</label>
-                  <input className="input-field" placeholder="e.g. Cyberarts Studio Academy" value={schoolName} onChange={e => setSchoolName(e.target.value)} />
+                  <input className="input-field" placeholder="e.g. Riverside High School" value={schoolName} onChange={e => setSchoolName(e.target.value)} />
                 </div>
                 <div>
                   <label style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>TEACHER NAME</label>
@@ -1598,8 +1598,10 @@ ${htmlParagraphs}
                   🌐 Translate Full Report
                 </p>
                 <p style={{ margin: "0 0 14px 0", fontSize: 13, color: "#6b7280" }}>
-                  Translates the entire report — including all prompt content — into professional educator language.
+                  Translates the entire report — including all prompt content — into professional educator language. Select a language to begin.
                 </p>
+
+                {/* Language picker */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
                   {[
                     {code:"es", label:"🇪🇸 Spanish / Español"},
@@ -1629,36 +1631,93 @@ ${htmlParagraphs}
                   ))}
                 </div>
 
+                {/* Spinner */}
                 {isTranslating && (
                   <div style={{ textAlign: "center", padding: "20px 0", color: "#0e7490", fontSize: 14, fontWeight: 600 }}>
-                    <span style={{ display: "inline-block", animation: "spin 1s linear infinite", marginRight: 8 }}>⏳</span>
-                    Translating your report...
+                    ⏳ Translating your report...
                   </div>
                 )}
 
+                {/* Error */}
                 {translateError && (
                   <div style={{ padding: "10px 14px", background: "#fef2f2", borderRadius: 8, color: "#b91c1c", fontSize: 13, marginBottom: 12 }}>
                     ⚠️ {translateError}
                   </div>
                 )}
 
-                {translatedReport && !isTranslating && (
-                  <div>
-                    <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 10, padding: 20, fontSize: 14, lineHeight: 1.85, color: "#1f2937", whiteSpace: "pre-wrap", marginBottom: 12, fontFamily: "'Source Serif 4', serif" }}>
-                      {translatedReport}
+                {/* Translated report + actions */}
+                {translatedReport && !isTranslating && (() => {
+                  const { tName, cName, wOf, isDaily } = getNames();
+                  const isMP = reportFrequency === "marking_period";
+                  const subj = isDaily ? `Daily Progress Update – ${cName}` : isMP ? `Marking Period Progress Report – ${cName}` : `Weekly Progress Report – ${cName}`;
+                  const mailLink = `mailto:?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(translatedReport)}`;
+                  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                  const smsLink = isMobile ? `sms:?body=${encodeURIComponent(translatedReport)}` : null;
+                  return (
+                    <div>
+                      {/* Translated text box — editable */}
+                      <div style={{ marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 12, color: "#0e7490", fontWeight: 700 }}>✅ Translation complete — click to edit before sending</span>
+                        <button onClick={() => { setTranslatedReport(""); setTranslateLang(""); }}
+                          style={{ fontSize: 11, color: "#6b7280", background: "none", border: "none", cursor: "pointer" }}>↩ Clear</button>
+                      </div>
+                      <textarea
+                        value={translatedReport}
+                        onChange={e => setTranslatedReport(e.target.value)}
+                        style={{ width: "100%", minHeight: 260, padding: 16, fontSize: 14, lineHeight: 1.85,
+                          color: "#1f2937", whiteSpace: "pre-wrap", fontFamily: "'Source Serif 4', serif",
+                          border: "1px solid #99f6e4", borderRadius: 10, background: "white",
+                          resize: "vertical", boxSizing: "border-box", cursor: "text" }}
+                      />
+
+                      {/* Export options for translated report */}
+                      <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button
+                          onClick={() => {
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard.writeText(translatedReport)
+                                .then(() => alert("Translated report copied!"))
+                                .catch(() => {
+                                  const ta = document.createElement("textarea");
+                                  ta.value = translatedReport;
+                                  document.body.appendChild(ta);
+                                  ta.select();
+                                  document.execCommand("copy");
+                                  document.body.removeChild(ta);
+                                  alert("Translated report copied!");
+                                });
+                            } else {
+                              const ta = document.createElement("textarea");
+                              ta.value = translatedReport;
+                              document.body.appendChild(ta);
+                              ta.select();
+                              document.execCommand("copy");
+                              document.body.removeChild(ta);
+                              alert("Translated report copied!");
+                            }
+                          }}
+                          style={{ padding: "10px 18px", border: "none", borderRadius: 8,
+                            background: "linear-gradient(135deg,#4c1d95,#7c3aed)", color: "white",
+                            fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Source Serif 4', serif" }}
+                        >📋 Copy Translated</button>
+                        <a href={mailLink}
+                          style={{ padding: "10px 18px", border: "none", borderRadius: 8,
+                            background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white",
+                            fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Source Serif 4', serif",
+                            textDecoration: "none", display: "inline-block" }}
+                        >✉️ Email Translated</a>
+                        {smsLink && (
+                          <a href={smsLink}
+                            style={{ padding: "10px 18px", border: "none", borderRadius: 8,
+                              background: "linear-gradient(135deg,#059669,#047857)", color: "white",
+                              fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Source Serif 4', serif",
+                              textDecoration: "none", display: "inline-block" }}
+                          >💬 Text Translated</a>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <button
-                        onClick={() => { navigator.clipboard.writeText(translatedReport); }}
-                        style={{ padding: "10px 20px", border: "none", borderRadius: 8, background: "linear-gradient(135deg,#4c1d95,#7c3aed)", color: "white", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Source Serif 4', serif" }}
-                      >📋 Copy Translated Report</button>
-                      <button
-                        onClick={() => { setTranslatedReport(""); setTranslateLang(""); }}
-                        style={{ padding: "10px 20px", border: "2px solid #e5e7eb", borderRadius: 8, background: "white", color: "#374151", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "'Source Serif 4', serif" }}
-                      >↩ Clear</button>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             )}
 
