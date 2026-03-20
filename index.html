@@ -1888,7 +1888,22 @@ ${htmlParagraphs}
                       >📋 Select &amp; Copy</button>
                       <button
                         onClick={() => {
-                          const text = editedReport || report;
+                          const isMarkingPeriod = reportFrequency === "marking_period";
+                          const termLabel = isMarkingPeriod
+                            ? (["Mid-Year","End of Year"].includes(termType) ? termType : termType === "Custom" ? weekOf : `${termType}${weekOf ? " " + weekOf : ""}`)
+                            : weekOf;
+                          const reportLabel = reportFrequency === "daily" ? "Daily Progress Update" : isMarkingPeriod ? "Marking Period Progress Report" : "Weekly Progress Report";
+                          const periodLabel = isMarkingPeriod ? "Term" : reportFrequency === "daily" ? "Date" : "Week of";
+                          const headerLines = [
+                            `GradeRelay — ${reportLabel}`,
+                            `─────────────────────────────`,
+                            `Student: _______________`,
+                            teacherName ? `Teacher: ${teacherName}` : "",
+                            className ? `Class/Subject: ${className}` : "",
+                            studentGradeLevel ? `Grade: ${studentGradeLevel}` : "",
+                            termLabel ? `${periodLabel}: ${termLabel}` : "",
+                          ].filter(Boolean).join("\n");
+                          const fullText = headerLines + "\n\n" + (editedReport || report);
                           const copyText = (t) => {
                             if (navigator.clipboard && navigator.clipboard.writeText) {
                               navigator.clipboard.writeText(t).catch(() => {
@@ -1904,7 +1919,7 @@ ${htmlParagraphs}
                               document.body.removeChild(ta);
                             }
                           };
-                          copyText(text);
+                          copyText(fullText);
                           window.open("https://docs.new", "_blank");
                         }}
                         style={{ padding: "7px 14px", background: "white", color: "#3b0764", border: "2px solid #3b0764", borderRadius: 6, cursor: "pointer", fontWeight: 700, fontSize: 13 }}
