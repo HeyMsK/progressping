@@ -684,8 +684,8 @@ const TRANSLATIONS = {
     intro_weekly: "This is a weekly progress report to let you know how",
     intro_daily: "This is a daily progress update to let you know how",
     intro_mp: "This is a marking period progress report to let you know how",
-    intro_mid: "is doing",
-    intro_end: "in",
+    intro_mid: "is doing this week in",
+    intro_end: "",
     intro_tail: "We value your partnership in their education and want to keep you informed of their progress.",
     academic: "Academically,",
     participation: "In terms of class participation,",
@@ -702,8 +702,8 @@ const TRANSLATIONS = {
     intro_weekly: "Este es un informe de progreso semanal para informarle cómo",
     intro_daily: "Esta es una actualización de progreso diaria para informarle cómo",
     intro_mp: "Este es un informe de progreso del período de calificaciones para informarle cómo",
-    intro_mid: "se está desempeñando",
-    intro_end: "en",
+    intro_mid: "se está desempeñando esta semana en",
+    intro_end: "",
     intro_tail: "Valoramos su colaboración en la educación de su hijo/a y queremos mantenerle informado/a sobre su progreso.",
     academic: "Académicamente,",
     participation: "En cuanto a la participación en clase,",
@@ -739,7 +739,7 @@ const TRANSLATIONS = {
     intro_daily: "এটি একটি দৈনিক অগ্রগতি আপডেট, জানাতে চাই যে",
     intro_mp: "এটি একটি মার্কিং পিরিয়ড অগ্রগতি প্রতিবেদন, জানাতে চাই যে",
     intro_mid: "এই সপ্তাহে",
-    intro_end: "ক্লাসে কেমন করছে",
+    intro_end: "ক্লাসে কেমন করছে —",
     intro_tail: "আমরা আপনার সন্তানের শিক্ষায় আপনার অংশীদারিত্বকে মূল্য দিই এবং তাদের অগ্রগতি সম্পর্কে আপনাকে অবহিত রাখতে চাই।",
     academic: "একাডেমিকভাবে,",
     participation: "ক্লাসে অংশগ্রহণের ক্ষেত্রে,",
@@ -829,7 +829,7 @@ const TRANSLATIONS = {
     intro_daily: "यह एक दैनिक प्रगति अपडेट है, जिसमें हम आपको बताना चाहते हैं कि",
     intro_mp: "यह एक मार्किंग पीरियड प्रगति रिपोर्ट है, जिसमें हम आपको बताना चाहते हैं कि",
     intro_mid: "इस सप्ताह",
-    intro_end: "कक्षा में कैसा कर रहे हैं",
+    intro_end: "कक्षा में कैसा कर रहे हैं —",
     intro_tail: "हम आपके बच्चे की शिक्षा में आपकी भागीदारी को महत्व देते हैं और उनकी प्रगति के बारे में आपको सूचित रखना चाहते हैं।",
     academic: "शैक्षणिक दृष्टि से,",
     participation: "कक्षा में भागीदारी के संदर्भ में,",
@@ -923,7 +923,9 @@ function App() {
     const T = TRANSLATIONS[reportLang] || TRANSLATIONS.en;
     lines.push(`${T.greeting}\n`);
     const introType = isDaily ? T.intro_daily : isMarkingPeriod ? T.intro_mp : T.intro_weekly;
-    lines.push(`${introType} ${sNameFirst} ${T.intro_mid} ${cName}${T.intro_end ? " " + T.intro_end : ""}. ${T.intro_tail}\n`);
+    const introPeriodWord = isDaily ? "today" : isMarkingPeriod ? "this marking period" : "this week";
+    const introMid = T.intro_mid.replace("this week", introPeriodWord);
+    lines.push(`${introType} ${sNameFirst} ${introMid} ${cName}${T.intro_end ? " " + T.intro_end : ""}. ${T.intro_tail}\n`);
 
     const academic     = [...(selectedPrompts["positive_academic"] || []),          ...(selectedPrompts["needs_support_academic"] || [])];
     const participation= [...(selectedPrompts["positive_participation"] || []),     ...(selectedPrompts["needs_support_participation"] || [])];
@@ -934,7 +936,7 @@ function App() {
     const general      = selectedPrompts["general"] || [];
 
     if (selectedSubjectPrompts.length > 0) {
-      const subjLabel = activeSubject ? activeSubject.replace(/^[^a-zA-Z]+/, "").trim() : "";
+      const subjLabel = activeSubject ? activeSubject.replace(/^[^\w]+/, "").trim() : "";
       const subjPrefix = subjLabel ? `In ${subjLabel}, ` : "";
       lines.push(`${subjPrefix}${sName} ${selectedSubjectPrompts.join("; and ")}.\n`);
     }
