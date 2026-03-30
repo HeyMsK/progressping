@@ -25,7 +25,6 @@
       &quot;purpose&quot;: &quot;any maskable&quot;
     }]
   }" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet" />
@@ -477,7 +476,108 @@ const PRICE_MONTHLY  = "price_1TEB9X3NEEAPPVNg0weLo83P";
 const PRICE_ANNUAL   = "price_1TG1hZ3NEEAPPVNgkrhjKGS8";
 const FOUNDING_LIMIT = 100;
 
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON) : null;
+// Lightweight Supabase client using fetch
+const supabase = {
+  _url: SUPABASE_URL,
+  _key: SUPABASE_ANON,
+  _headers: {
+    "apikey": SUPABASE_ANON,
+    "Authorization": "Bearer " + SUPABASE_ANON,
+    "Content-Type": "application/json",
+    "Prefer": "return=representation",
+  },
+  auth: {
+    _session: null,
+    async getSession() {
+      const stored = localStorage.getItem("gr_session");
+      if (stored) {
+        try {
+          const sess = JSON.parse(stored);
+          // Check expiry
+          if (sess.expires_at && Date.now() / 1000 < sess.expires_at) {
+            supabase.auth._session = sess;
+            return { data: { session: sess } };
+          }
+        } catch(e) {}
+      }
+      return { data: { session: null } };
+    },
+    async signUp({ email, password }) {
+      const res = await fetch(SUPABASE_URL + "/auth/v1/signup", {
+        method: "POST",
+        headers: { "apikey": SUPABASE_ANON, "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.error || data.msg) return { error: { message: data.error_description || data.msg || "Signup failed" } };
+      return { data, error: null };
+    },
+    async signInWithPassword({ email, password }) {
+      const res = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=password", {
+        method: "POST",
+        headers: { "apikey": SUPABASE_ANON, "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.error || data.error_code) return { error: { message: data.error_description || data.msg || "Login failed" } };
+      const session = { ...data, user: data.user, expires_at: Math.floor(Date.now()/1000) + (data.expires_in || 3600) };
+      localStorage.setItem("gr_session", JSON.stringify(session));
+      supabase.auth._session = session;
+      supabase.auth._notifyChange(session);
+      return { data: { session }, error: null };
+    },
+    async signOut() {
+      localStorage.removeItem("gr_session");
+      supabase.auth._session = null;
+      supabase.auth._notifyChange(null);
+    },
+    _listeners: [],
+    onAuthStateChange(cb) {
+      supabase.auth._listeners.push(cb);
+      return { data: { subscription: { unsubscribe: () => { supabase.auth._listeners = supabase.auth._listeners.filter(l => l !== cb); } } } };
+    },
+    _notifyChange(session) {
+      supabase.auth._listeners.forEach(cb => cb("SIGNED_IN", session));
+    },
+  },
+  from(table) {
+    return {
+      _table: table,
+      _filters: [],
+      _selectCols: "*",
+      select(cols, opts) { this._selectCols = cols || "*"; this._opts = opts; return this; },
+      eq(col, val) { this._filters.push(`${col}=eq.${val}`); return this; },
+      single() { this._single = true; return this; },
+      async _exec(method, body) {
+        const sess = supabase.auth._session;
+        const headers = { ...supabase._headers };
+        if (sess && sess.access_token) headers["Authorization"] = "Bearer " + sess.access_token;
+        if (this._single) headers["Accept"] = "application/vnd.pgrst.object+json";
+        if (this._opts && this._opts.count === "exact") headers["Prefer"] = "count=exact";
+        let url = `${SUPABASE_URL}/rest/v1/${this._table}`;
+        if (this._filters.length) url += "?" + this._filters.join("&");
+        if (this._selectCols !== "*") url += (url.includes("?") ? "&" : "?") + "select=" + this._selectCols;
+        const opts = { method, headers };
+        if (body) opts.body = JSON.stringify(body);
+        try {
+          const res = await fetch(url, opts);
+          if (this._opts && this._opts.count === "exact") {
+            const count = parseInt(res.headers.get("Content-Range")?.split("/")[1] || "0");
+            return { count, error: null };
+          }
+          if (res.status === 406 || res.status === 204) return { data: null, error: null };
+          const data = await res.json();
+          if (data && data.code) return { data: null, error: data };
+          return { data, error: null };
+        } catch(e) { return { data: null, error: { message: e.message } }; }
+      },
+      async insert(body) { return this._exec("POST", body); },
+      async update(body) { return this._exec("PATCH", body); },
+      async delete() { return this._exec("DELETE"); },
+      then(resolve) { return this._exec("GET").then(resolve); },
+    };
+  },
+};
 
 const SUBJECT_PROMPTS = {
   "🌱 Pre-K": {
