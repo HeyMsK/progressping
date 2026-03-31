@@ -76,424 +76,6 @@
   <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
   
-  <!-- GradeRelay Config & Supabase Client (plain JS, not Babel) -->
-  <script>
-// ── Supabase + Stripe Config ────────────────────────────
-const SUPABASE_URL   = "https://lzsfvzovzizzvrnkzsrk.supabase.co";
-const SUPABASE_ANON  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6c2Z2em92eml6enZybmt6c3JrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDUwMDksImV4cCI6MjA5MDM4MTAwOX0.uwxxiUI1XlEwiu1Jq6cqyG27gagLCnQ2Y7icQRgGqLM";
-const STRIPE_PUB     = "pk_live_51TBwsl3NEEAPPVNgZCg46SjUFUWYX9pJ7Bu5uGteU07stKMKm2LDyR3Ft8dVAPBIC94DzhU3f2yLOitceuyS8X5r00Ezc0nlbd";
-const PRICE_FOUNDING = "price_1TG1fo3NEEAPPVNg9iftpTuO";
-const PRICE_MONTHLY  = "price_1TEB9X3NEEAPPVNg0weLo83P";
-const PRICE_ANNUAL   = "price_1TG1hZ3NEEAPPVNgkrhjKGS8";
-const FOUNDING_LIMIT = 100;
-
-// Lightweight Supabase client using fetch
-const supabase = {
-  _url: SUPABASE_URL,
-  _key: SUPABASE_ANON,
-  _headers: {
-    "apikey": SUPABASE_ANON,
-    "Authorization": "Bearer " + SUPABASE_ANON,
-    "Content-Type": "application/json",
-    "Prefer": "return=representation",
-  },
-  auth: {
-    _session: null,
-    async getSession() {
-      const stored = localStorage.getItem("gr_session");
-      if (stored) {
-        try {
-          const sess = JSON.parse(stored);
-          // Check expiry
-          if (sess.expires_at && Date.now() / 1000 < sess.expires_at) {
-            supabase.auth._session = sess;
-            return { data: { session: sess } };
-          }
-        } catch(e) {}
-      }
-      return { data: { session: null } };
-    },
-    async signUp({ email, password }) {
-      const res = await fetch(SUPABASE_URL + "/auth/v1/signup", {
-        method: "POST",
-        headers: { "apikey": SUPABASE_ANON, "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (data.error || data.msg) return { error: { message: data.error_description || data.msg || "Signup failed" } };
-      return { data, error: null };
-    },
-    async signInWithPassword({ email, password }) {
-      const res = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=password", {
-        method: "POST",
-        headers: { "apikey": SUPABASE_ANON, "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (data.error || data.error_code) return { error: { message: data.error_description || data.msg || "Login failed" } };
-      const session = { ...data, user: data.user, expires_at: Math.floor(Date.now()/1000) + (data.expires_in || 3600) };
-      localStorage.setItem("gr_session", JSON.stringify(session));
-      supabase.auth._session = session;
-      supabase.auth._notifyChange(session);
-      return { data: { session }, error: null };
-    },
-    async signOut() {
-      localStorage.removeItem("gr_session");
-      supabase.auth._session = null;
-      supabase.auth._notifyChange(null);
-    },
-    _listeners: [],
-    onAuthStateChange(cb) {
-      supabase.auth._listeners.push(cb);
-      return { data: { subscription: { unsubscribe: () => { supabase.auth._listeners = supabase.auth._listeners.filter(l => l !== cb); } } } };
-    },
-    _notifyChange(session) {
-      supabase.auth._listeners.forEach(cb => cb("SIGNED_IN", session));
-    },
-  },
-  from(table) {
-    return {
-      _table: table,
-      _filters: [],
-      _selectCols: "*",
-      select(cols, opts) { this._selectCols = cols || "*"; this._opts = opts; return this; },
-      eq(col, val) { this._filters.push(`${col}=eq.${val}`); return this; },
-      single() { this._single = true; return this; },
-      async _exec(method, body) {
-        const sess = supabase.auth._session;
-        const headers = { ...supabase._headers };
-        if (sess && sess.access_token) headers["Authorization"] = "Bearer " + sess.access_token;
-        if (this._single) headers["Accept"] = "application/vnd.pgrst.object+json";
-        if (this._opts && this._opts.count === "exact") headers["Prefer"] = "count=exact";
-        let url = `${SUPABASE_URL}/rest/v1/${this._table}`;
-        if (this._filters.length) url += "?" + this._filters.join("&");
-        if (this._selectCols !== "*") url += (url.includes("?") ? "&" : "?") + "select=" + this._selectCols;
-        const opts = { method, headers };
-        if (body) opts.body = JSON.stringify(body);
-        try {
-          const res = await fetch(url, opts);
-          if (this._opts && this._opts.count === "exact") {
-            const count = parseInt(res.headers.get("Content-Range")?.split("/")[1] || "0");
-            return { count, error: null };
-          }
-          if (res.status === 406 || res.status === 204) return { data: null, error: null };
-          const data = await res.json();
-          if (data && data.code) return { data: null, error: data };
-          return { data, error: null };
-        } catch(e) { return { data: null, error: { message: e.message } }; }
-      },
-      async insert(body) { return this._exec("POST", body); },
-      async update(body) { return this._exec("PATCH", body); },
-      async delete() { return this._exec("DELETE"); },
-      then(resolve) { return this._exec("GET").then(resolve); },
-    };
-  },
-};
-
-const SUBJECT_PROMPTS = {
-  "🌱 Pre-K": {
-    color: "#065f46", bg: "#d1fae5",
-    strengths: [
-      "is developing beautifully — showing curiosity, joy, and readiness to learn every day",
-      "demonstrates strong social-emotional skills — shares, takes turns, and shows kindness to peers",
-      "is building early literacy skills with growing confidence",
-      "shows strong fine and gross motor development through play and creative activities",
-      "communicates needs, ideas, and feelings clearly and with growing vocabulary",
-      "is making wonderful strides in number recognition, counting, and early math concepts",
-      "transitions between activities smoothly and follows classroom routines with independence",
-      "shows genuine love of learning — arrives eager, curious, and ready to explore every day",
-    ],
-    growth: [
-      "is still developing the ability to regulate emotions during transitions",
-      "needs continued support building vocabulary and expressive language skills",
-      "is working on sharing, taking turns, and cooperating with peers during play",
-      "fine motor skills — including pencil grip and scissor use — are still developing",
-      "needs gentle encouragement to engage during whole-group and circle time activities",
-      "would benefit from additional practice with letter and number recognition at home",
-      "separation at arrival continues to be an adjustment — we are supporting this with care",
-      "needs support following multi-step directions and classroom routines independently",
-    ],
-  },
-  "📚 ELA": {
-    color: "#1b4965", bg: "#caf0f8",
-    strengths: [
-      "is demonstrating strong reading comprehension and makes meaningful connections to the text",
-      "writes with clarity, voice, and well-organized ideas",
-      "contributes thoughtful, text-based responses during class discussions",
-      "shows excellent command of grammar, punctuation, and sentence structure",
-      "is excelling in close reading and literary analysis",
-      "has shown remarkable growth in their writing craft this marking period",
-      "demonstrates strong vocabulary and uses precise language in both writing and discussion",
-      "approaches complex texts with confidence and reads with depth and critical insight",
-    ],
-    growth: [
-      "needs to provide more textual evidence to support written arguments",
-      "reading assignments are not being completed consistently",
-      "written responses lack sufficient detail and development of ideas",
-      "would benefit from additional support with grammar and sentence construction",
-      "needs to slow down and revise written work more carefully before submitting",
-      "struggles to identify key themes and central ideas in complex texts",
-      "oral participation during class discussion needs to be more frequent and substantive",
-      "independent reading log is not being completed — nightly reading is strongly encouraged",
-    ],
-  },
-  "🔢 Math": {
-    color: "#3d5a00", bg: "#ecfccb",
-    strengths: [
-      "demonstrates strong number sense and mathematical reasoning",
-      "is excelling in problem-solving and consistently shows their work clearly",
-      "has shown impressive growth in computation accuracy this marking period",
-      "applies mathematical concepts independently and with confidence",
-      "demonstrates deep conceptual understanding beyond procedural computation",
-      "is a strong contributor during math discussions and collaborative problem-solving",
-      "approaches word problems strategically and with strong analytical thinking",
-      "shows excellent understanding of current unit concepts and applies them accurately",
-    ],
-    growth: [
-      "needs more practice with fractions, decimals, and operations",
-      "struggles to complete multi-step problems independently",
-      "is not consistently showing work — this makes it difficult to identify errors",
-      "would benefit from additional support with word problems",
-      "rushing through problems is leading to careless errors — slowing down will help",
-      "needs to review foundational skills that are impacting current unit performance",
-      "extra help sessions are strongly recommended to build confidence and accuracy",
-      "needs to ask for help sooner when concepts are unclear — support is always available",
-    ],
-  },
-  "🔬 Science": {
-    color: "#065f46", bg: "#d1fae5",
-    strengths: [
-      "approaches science with genuine curiosity and strong analytical thinking",
-      "lab work is detailed, accurate, and reflects careful scientific observation",
-      "demonstrates excellent understanding of current science concepts and vocabulary",
-      "excels at connecting science concepts to real-world phenomena",
-      "asks insightful questions that reflect deep engagement with scientific content",
-      "is a strong collaborative partner during lab activities and experiments",
-      "science writing reflects precise observation, clear reasoning, and strong organization",
-      "shows impressive growth in scientific thinking and investigative skills this marking period",
-    ],
-    growth: [
-      "science assignments are being rushed — more care and detail are needed",
-      "needs to review key vocabulary and concepts from the current unit",
-      "lab reports require more precise observations and detailed data recording",
-      "struggles to apply scientific reasoning to explain observations and results",
-      "needs to engage more actively during science discussions and experiments",
-      "would benefit from reviewing class notes and textbook readings at home regularly",
-      "is not completing assigned science readings — this is impacting comprehension",
-      "needs to take more care with lab safety procedures and classroom expectations",
-    ],
-  },
-  "🌍 Social Studies": {
-    color: "#7c2d12", bg: "#fef3c7",
-    strengths: [
-      "demonstrates strong knowledge of current content and historical context",
-      "makes impressive connections between historical events and present-day issues",
-      "written work reflects thorough research and well-developed arguments",
-      "shows exceptional skill in analyzing primary sources and historical evidence",
-      "brings diverse and thoughtful perspectives to class discussions — a real asset",
-      "participates actively and contributes meaningful ideas during document-based activities",
-      "map and geography skills are strong and applied with accuracy",
-      "shows excellent understanding of civic concepts, government structures, and global issues",
-    ],
-    growth: [
-      "social studies work does not yet reflect adequate research or preparation",
-      "needs to strengthen the use of evidence and specific examples in written responses",
-      "struggles to connect historical events to broader themes and patterns",
-      "needs to engage more actively in class discussions and document-based activities",
-      "map skills and geographic literacy need additional practice and review",
-      "assigned readings are not being completed — this is impacting class performance",
-      "needs to develop stronger note-taking habits to support study and retention",
-      "current events awareness needs improvement — regular news reading is encouraged",
-    ],
-  },
-  "🎨 The Arts": {
-    color: "#4a1e6e", bg: "#e9d8fd",
-    strengths: [
-      "demonstrates exceptional creativity, originality, and artistic vision",
-      "shows strong technical skill and intentional craft in their work",
-      "takes creative risks and pushes their practice in exciting new directions",
-      "portfolio work reflects meaningful growth and a developing artistic voice",
-      "approaches every project with focus, care, and genuine artistic investment",
-      "is an inspiring presence in the studio — leads by example through effort and enthusiasm",
-      "demonstrates strong understanding of design principles, composition, and visual language",
-      "artist statement writing reflects deep reflection and a mature perspective on their own work",
-    ],
-    growth: [
-      "arts assignments are being submitted incomplete or without sufficient effort",
-      "needs to slow down and invest more time and intention in the creative process",
-      "technical skills need further development — extra practice and revision are encouraged",
-      "is not using class time productively — studio focus needs significant improvement",
-      "needs to engage more actively during critique sessions and class discussions",
-      "would benefit from experimenting more and taking greater creative risks",
-      "sketchbook and process work are not being maintained consistently",
-      "needs to bring all required materials to class — being unprepared is impacting progress",
-    ],
-  },
-  "🏃 Phys Ed": {
-    color: "#065f46", bg: "#d1fae5",
-    strengths: [
-      "demonstrates excellent sportsmanship, teamwork, and respect for peers",
-      "arrives prepared and brings a positive attitude to every class",
-      "shows strong physical fitness, coordination, and athletic skill development",
-      "is a natural leader during team activities — motivates and supports classmates",
-      "follows all safety rules and class expectations consistently and independently",
-      "shows impressive improvement in endurance, strength, and physical conditioning",
-      "transitions between activities quickly and stays focused throughout the entire class",
-      "demonstrates a genuine love of movement and physical activity — a pleasure to have in class",
-    ],
-    growth: [
-      "needs to arrive to class prepared with appropriate attire and footwear",
-      "sportsmanship and respect for peers during competitive activities need improvement",
-      "needs to participate more actively and with greater effort",
-      "engagement and attitude during class need significant improvement",
-      "needs to follow safety rules and class procedures more consistently",
-      "struggles to work cooperatively during team activities — this is an area of focus",
-      "frequently arrives late to class — timely arrival is expected and important",
-      "needs to demonstrate more self-control and maturity during competitive activities",
-    ],
-  },
-  "💚 SEL": {
-    color: "#4a1e6e", bg: "#ede9fe",
-    strengths: [
-      "demonstrates impressive self-awareness and the ability to name and manage their emotions",
-      "shows strong empathy and genuine care for the feelings of others",
-      "is developing excellent conflict resolution and problem-solving skills",
-      "builds positive, respectful relationships with peers and trusted adults",
-      "is making meaningful progress in social-emotional growth this period",
-      "demonstrates responsible decision-making and thinks through consequences thoughtfully",
-      "shows remarkable resilience — bounces back from challenges with a positive mindset",
-      "is a calming, supportive presence in the classroom — models kindness and inclusion daily",
-    ],
-    growth: [
-      "needs additional support identifying and regulating emotions in challenging moments",
-      "is working on building more positive and respectful peer relationships",
-      "conflict resolution skills are still developing — continued support is recommended",
-      "a check-in with the school counselor may be beneficial",
-      "needs encouragement to seek help from trusted adults when feeling overwhelmed",
-      "responsible decision-making in social situations requires continued growth and guidance",
-      "is working on managing frustration and responding constructively under pressure",
-      "building stronger connections with peers will support overall well-being and engagement",
-    ],
-  },
-  "🎓 AP": {
-    color: "#1e3a5f", bg: "#dbeafe",
-    strengths: [
-      "is performing at a high level and demonstrates true college-readiness",
-      "written work reflects sophisticated analysis and original thinking",
-      "manages the rigor of this AP course with impressive maturity and discipline",
-      "takes intellectual risks and contributes insights that elevate class discussion",
-      "is well-prepared for the AP exam and demonstrates mastery of course concepts",
-      "free-response and essay writing reflect strong thesis development and persuasive argumentation",
-      "is an exceptional contributor to seminar-style discussions — brings depth, nuance, and curiosity",
-      "consistently goes beyond surface-level understanding to engage with complexity and ambiguity",
-    ],
-    growth: [
-      "needs to strengthen thesis development and the use of evidence",
-      "would benefit from additional exam preparation — practice responses are encouraged",
-      "time management and meeting AP assignment deadlines require immediate attention",
-      "struggles to sustain the pace and rigor expected — extra help is recommended",
-      "AP-level reading and annotation habits need to be more consistent and thorough",
-      "needs to engage more deeply with primary sources and course texts outside of class",
-      "free-response practice is strongly recommended to build exam confidence and timing",
-      "needs to seek extra help proactively — the workload in this course requires consistent effort",
-    ],
-  },
-  "🌐 ENL": {
-    color: "#065f46", bg: "#d1fae5",
-    strengths: [
-      "is making impressive strides in English language acquisition and communication",
-      "demonstrates growing confidence in speaking, reading, and writing in English",
-      "vocabulary development is strong — applies new academic language with accuracy",
-      "shows remarkable perseverance and a genuine commitment to language learning",
-      "actively participates in class and makes excellent use of language supports and scaffolds",
-      "writing in English is becoming more organized, detailed, and expressive",
-      "shows strong listening comprehension and follows complex classroom instruction independently",
-      "is making excellent progress transitioning toward greater independence in English-language tasks",
-    ],
-    growth: [
-      "needs additional support building academic English vocabulary",
-      "reading comprehension in English requires continued scaffolding and practice",
-      "written English needs further development — sentence structure support is recommended",
-      "needs encouragement to take more risks using English during class discussions",
-      "would benefit from more structured opportunities to practice speaking and listening in English",
-      "additional home practice with English reading and vocabulary will accelerate growth significantly",
-      "needs to use provided language supports and graphic organizers more consistently",
-      "transitioning to greater independence in English-language tasks is a key area of focus this period",
-    ],
-  },
-  "💡 SpEd": {
-    color: "#4a1e6e", bg: "#ede9fe",
-    strengths: [
-      "is making meaningful progress toward their IEP goals this marking period",
-      "demonstrates strong self-advocacy and uses accommodations effectively",
-      "shows impressive growth in the areas targeted by their learning plan",
-      "the progress made this period reflects real dedication — we are proud",
-      "responds exceptionally well to support strategies and applies them with growing independence",
-      "is building confidence in ways that are genuinely exciting to observe",
-      "demonstrates a positive attitude toward challenges and persists through difficulty with support",
-      "the growth shown this period is a direct reflection of hard work and a strong team effort",
-    ],
-    growth: [
-      "additional support is needed to make progress toward current IEP goals",
-      "would benefit from more consistent use of provided accommodations and supports",
-      "a check-in meeting with the IEP team may be helpful to review current supports",
-      "we recommend continued collaboration between home and school to reinforce strategies",
-      "needs encouragement to self-advocate and ask for help when needed",
-      "transitions between tasks and activities continue to be an area requiring additional support",
-      "maintaining focus and on-task behavior during independent work remains a challenge",
-      "we encourage continued use of at-home support strategies to reinforce classroom learning",
-    ],
-  },
-  "🌎 Foreign Language": {
-    color: "#1b4965", bg: "#caf0f8",
-    strengths: [
-      "is making impressive progress in acquiring new vocabulary and language structures",
-      "demonstrates strong pronunciation, fluency, and confidence when speaking the target language",
-      "consistently completes foreign language assignments with care and attention to detail",
-      "shows genuine enthusiasm and curiosity for language learning and cultural exploration",
-      "applies grammar rules and vocabulary accurately in both written and spoken work",
-      "has shown remarkable growth in reading and writing in the target language this marking period",
-      "participates actively in language activities, conversations, and cultural discussions",
-      "retains new vocabulary and structures with impressive consistency",
-    ],
-    growth: [
-      "needs more consistent practice with vocabulary and grammar at home",
-      "written work in the target language contains frequent errors that need additional review",
-      "needs to participate more actively during oral language practice and conversations",
-      "foreign language homework needs more consistent completion and effort",
-      "would benefit from daily review of vocabulary and language structures outside of class",
-      "struggles to retain new vocabulary — flashcard practice at home is strongly encouraged",
-      "needs to take more risks speaking in the target language during class",
-      "reading comprehension in the target language requires additional practice and support",
-    ],
-  },
-  "🔵 General": {
-    color: "#374151", bg: "#f3f4f6",
-    strengths: [
-      "is having an excellent week across all subject areas",
-      "brings consistent effort and a positive attitude to every class",
-      "is a pleasure to work with — engaged, focused, and always prepared",
-      "shows impressive growth that reflects dedication both in and out of school",
-      "is a positive presence in the classroom and a role model for peers",
-      "demonstrates strong organizational skills and comes prepared every day",
-      "has made notable improvements this period that reflect real commitment and effort",
-      "is reaching their potential and we are proud of the progress shown",
-    ],
-    growth: [
-      "would benefit from additional support across multiple subject areas",
-      "extra help sessions are strongly recommended to build confidence and skills",
-      "organizational skills — including materials, assignments, and deadlines — need attention",
-      "a parent-teacher conference would be helpful to discuss a support plan",
-      "needs to demonstrate more consistent effort and engagement across all classes",
-      "arriving to class on time and fully prepared will make a significant difference",
-      "needs to take greater ownership of their learning and seek help when needed",
-      "we are here to support — please encourage reaching out for extra help regularly",
-    ],
-  },
-};
-
-  </script>
-
 <script type="text/babel" data-presets="react">
     const { useState } = React;
 
@@ -701,6 +283,7 @@ const PROMPTS = {
   ],
 };
 
+
 const CATEGORY_META = {
   positive_academic:          { label: "✅ Academic Strengths",              color: "#2d6a4f", bg: "#d8f3dc" },
   needs_support_academic:     { label: "📚 Academic Support Needed",         color: "#7b2d00", bg: "#ffe8d6" },
@@ -715,6 +298,7 @@ const CATEGORY_META = {
   general_mp:                 { label: "📋 Marking Period Comments",          color: "#1e3a5f", bg: "#dbeafe", mpOnly: true },
   general:                    { label: "💡 General Comments",                color: "#374151", bg: "#f3f4f6" },
 };
+
 
 const SUBJECTS = {
   "🌱 PRE-K & KINDERGARTEN": {
@@ -888,6 +472,324 @@ const SUBJECTS = {
 
 
 
+
+const LANGUAGES = {
+  en: { label: "English", flag: "🇺🇸" },
+  es: { label: "Español", flag: "🇪🇸" },
+  zh: { label: "中文", flag: "🇨🇳" },
+  bn: { label: "বাংলা", flag: "🇧🇩" },
+  fr: { label: "Français/Créole", flag: "🇭🇹" },
+  ru: { label: "Русский", flag: "🇷🇺" },
+  uk: { label: "Українська", flag: "🇺🇦" },
+  ja: { label: "日本語", flag: "🇯🇵" },
+  hi: { label: "हिन्दी", flag: "🇮🇳" },
+  ar: { label: "العربية", flag: "🇸🇦" },
+};
+
+
+
+
+const SUBJECT_PROMPTS = {
+  "🌱 Pre-K": {
+    color: "#065f46", bg: "#d1fae5",
+    strengths: [
+      "is developing beautifully — showing curiosity, joy, and readiness to learn every day",
+      "demonstrates strong social-emotional skills — shares, takes turns, and shows kindness to peers",
+      "is building early literacy skills with growing confidence",
+      "shows strong fine and gross motor development through play and creative activities",
+      "communicates needs, ideas, and feelings clearly and with growing vocabulary",
+      "is making wonderful strides in number recognition, counting, and early math concepts",
+      "transitions between activities smoothly and follows classroom routines with independence",
+      "shows genuine love of learning — arrives eager, curious, and ready to explore every day",
+    ],
+    growth: [
+      "is still developing the ability to regulate emotions during transitions",
+      "needs continued support building vocabulary and expressive language skills",
+      "is working on sharing, taking turns, and cooperating with peers during play",
+      "fine motor skills — including pencil grip and scissor use — are still developing",
+      "needs gentle encouragement to engage during whole-group and circle time activities",
+      "would benefit from additional practice with letter and number recognition at home",
+      "separation at arrival continues to be an adjustment — we are supporting this with care",
+      "needs support following multi-step directions and classroom routines independently",
+    ],
+  },
+  "📚 ELA": {
+    color: "#1b4965", bg: "#caf0f8",
+    strengths: [
+      "is demonstrating strong reading comprehension and makes meaningful connections to the text",
+      "writes with clarity, voice, and well-organized ideas",
+      "contributes thoughtful, text-based responses during class discussions",
+      "shows excellent command of grammar, punctuation, and sentence structure",
+      "is excelling in close reading and literary analysis",
+      "has shown remarkable growth in their writing craft this marking period",
+      "demonstrates strong vocabulary and uses precise language in both writing and discussion",
+      "approaches complex texts with confidence and reads with depth and critical insight",
+    ],
+    growth: [
+      "needs to provide more textual evidence to support written arguments",
+      "reading assignments are not being completed consistently",
+      "written responses lack sufficient detail and development of ideas",
+      "would benefit from additional support with grammar and sentence construction",
+      "needs to slow down and revise written work more carefully before submitting",
+      "struggles to identify key themes and central ideas in complex texts",
+      "oral participation during class discussion needs to be more frequent and substantive",
+      "independent reading log is not being completed — nightly reading is strongly encouraged",
+    ],
+  },
+  "🔢 Math": {
+    color: "#3d5a00", bg: "#ecfccb",
+    strengths: [
+      "demonstrates strong number sense and mathematical reasoning",
+      "is excelling in problem-solving and consistently shows their work clearly",
+      "has shown impressive growth in computation accuracy this marking period",
+      "applies mathematical concepts independently and with confidence",
+      "demonstrates deep conceptual understanding beyond procedural computation",
+      "is a strong contributor during math discussions and collaborative problem-solving",
+      "approaches word problems strategically and with strong analytical thinking",
+      "shows excellent understanding of current unit concepts and applies them accurately",
+    ],
+    growth: [
+      "needs more practice with fractions, decimals, and operations",
+      "struggles to complete multi-step problems independently",
+      "is not consistently showing work — this makes it difficult to identify errors",
+      "would benefit from additional support with word problems",
+      "rushing through problems is leading to careless errors — slowing down will help",
+      "needs to review foundational skills that are impacting current unit performance",
+      "extra help sessions are strongly recommended to build confidence and accuracy",
+      "needs to ask for help sooner when concepts are unclear — support is always available",
+    ],
+  },
+  "🔬 Science": {
+    color: "#065f46", bg: "#d1fae5",
+    strengths: [
+      "approaches science with genuine curiosity and strong analytical thinking",
+      "lab work is detailed, accurate, and reflects careful scientific observation",
+      "demonstrates excellent understanding of current science concepts and vocabulary",
+      "excels at connecting science concepts to real-world phenomena",
+      "asks insightful questions that reflect deep engagement with scientific content",
+      "is a strong collaborative partner during lab activities and experiments",
+      "science writing reflects precise observation, clear reasoning, and strong organization",
+      "shows impressive growth in scientific thinking and investigative skills this marking period",
+    ],
+    growth: [
+      "science assignments are being rushed — more care and detail are needed",
+      "needs to review key vocabulary and concepts from the current unit",
+      "lab reports require more precise observations and detailed data recording",
+      "struggles to apply scientific reasoning to explain observations and results",
+      "needs to engage more actively during science discussions and experiments",
+      "would benefit from reviewing class notes and textbook readings at home regularly",
+      "is not completing assigned science readings — this is impacting comprehension",
+      "needs to take more care with lab safety procedures and classroom expectations",
+    ],
+  },
+  "🌍 Social Studies": {
+    color: "#7c2d12", bg: "#fef3c7",
+    strengths: [
+      "demonstrates strong knowledge of current content and historical context",
+      "makes impressive connections between historical events and present-day issues",
+      "written work reflects thorough research and well-developed arguments",
+      "shows exceptional skill in analyzing primary sources and historical evidence",
+      "brings diverse and thoughtful perspectives to class discussions",
+      "participates actively and contributes meaningful ideas during document-based activities",
+      "map and geography skills are strong and applied with accuracy",
+      "shows excellent understanding of civic concepts, government structures, and global issues",
+    ],
+    growth: [
+      "social studies work does not yet reflect adequate research or preparation",
+      "needs to strengthen the use of evidence and specific examples in written responses",
+      "struggles to connect historical events to broader themes and patterns",
+      "needs to engage more actively in class discussions and document-based activities",
+      "map skills and geographic literacy need additional practice and review",
+      "assigned readings are not being completed — this is impacting class performance",
+      "needs to develop stronger note-taking habits to support study and retention",
+      "current events awareness needs improvement — regular news reading is encouraged",
+    ],
+  },
+  "🎨 The Arts": {
+    color: "#4a1e6e", bg: "#e9d8fd",
+    strengths: [
+      "demonstrates exceptional creativity, originality, and artistic vision",
+      "shows strong technical skill and intentional craft in their work",
+      "takes creative risks and pushes their practice in exciting new directions",
+      "portfolio work reflects meaningful growth and a developing artistic voice",
+      "approaches every project with focus, care, and genuine artistic investment",
+      "is an inspiring presence in the studio — leads by example through effort and enthusiasm",
+      "demonstrates strong understanding of design principles, composition, and visual language",
+      "artist statement writing reflects deep reflection and a mature perspective on their own work",
+    ],
+    growth: [
+      "arts assignments are being submitted incomplete or without sufficient effort",
+      "needs to slow down and invest more time and intention in the creative process",
+      "technical skills need further development — extra practice and revision are encouraged",
+      "is not using class time productively — studio focus needs significant improvement",
+      "needs to engage more actively during critique sessions and class discussions",
+      "would benefit from experimenting more and taking greater creative risks",
+      "sketchbook and process work are not being maintained consistently",
+      "needs to bring all required materials to class — being unprepared is impacting progress",
+    ],
+  },
+  "🏃 Phys Ed": {
+    color: "#065f46", bg: "#d1fae5",
+    strengths: [
+      "demonstrates excellent sportsmanship, teamwork, and respect for peers",
+      "arrives prepared and brings a positive attitude to every class",
+      "shows strong physical fitness, coordination, and athletic skill development",
+      "is a natural leader during team activities — motivates and supports classmates",
+      "follows all safety rules and class expectations consistently and independently",
+      "shows impressive improvement in endurance, strength, and physical conditioning",
+      "transitions between activities quickly and stays focused throughout the entire class",
+      "demonstrates a genuine love of movement and physical activity",
+    ],
+    growth: [
+      "needs to arrive to class prepared with appropriate attire and footwear",
+      "sportsmanship and respect for peers during competitive activities need improvement",
+      "needs to participate more actively and with greater effort",
+      "engagement and attitude during class need significant improvement",
+      "needs to follow safety rules and class procedures more consistently",
+      "struggles to work cooperatively during team activities — this is an area of focus",
+      "frequently arrives late to class — timely arrival is expected and important",
+      "needs to demonstrate more self-control and maturity during competitive activities",
+    ],
+  },
+  "💚 SEL": {
+    color: "#4a1e6e", bg: "#ede9fe",
+    strengths: [
+      "demonstrates impressive self-awareness and the ability to name and manage their emotions",
+      "shows strong empathy and genuine care for the feelings of others",
+      "is developing excellent conflict resolution and problem-solving skills",
+      "builds positive, respectful relationships with peers and trusted adults",
+      "is making meaningful progress in social-emotional growth this period",
+      "demonstrates responsible decision-making and thinks through consequences thoughtfully",
+      "shows remarkable resilience — bounces back from challenges with a positive mindset",
+      "is a calming, supportive presence in the classroom — models kindness and inclusion daily",
+    ],
+    growth: [
+      "needs additional support identifying and regulating emotions in challenging moments",
+      "is working on building more positive and respectful peer relationships",
+      "conflict resolution skills are still developing — continued support is recommended",
+      "a check-in with the school counselor may be beneficial",
+      "needs encouragement to seek help from trusted adults when feeling overwhelmed",
+      "responsible decision-making in social situations requires continued growth and guidance",
+      "is working on managing frustration and responding constructively under pressure",
+      "building stronger connections with peers will support overall well-being and engagement",
+    ],
+  },
+  "🎓 AP": {
+    color: "#1e3a5f", bg: "#dbeafe",
+    strengths: [
+      "is performing at a high level and demonstrates true college-readiness",
+      "written work reflects sophisticated analysis and original thinking",
+      "manages the rigor of this AP course with impressive maturity and discipline",
+      "takes intellectual risks and contributes insights that elevate class discussion",
+      "is well-prepared for the AP exam and demonstrates mastery of course concepts",
+      "free-response and essay writing reflect strong thesis development and argumentation",
+      "is an exceptional contributor to seminar-style discussions",
+      "consistently goes beyond surface-level understanding to engage with complexity",
+    ],
+    growth: [
+      "needs to strengthen thesis development and the use of evidence",
+      "would benefit from additional exam preparation — practice responses are encouraged",
+      "time management and meeting AP assignment deadlines require immediate attention",
+      "struggles to sustain the pace and rigor expected — extra help is recommended",
+      "AP-level reading and annotation habits need to be more consistent and thorough",
+      "needs to engage more deeply with primary sources and course texts outside of class",
+      "free-response practice is strongly recommended to build exam confidence and timing",
+      "needs to seek extra help proactively — the workload in this course requires consistent effort",
+    ],
+  },
+  "🌐 ENL": {
+    color: "#065f46", bg: "#d1fae5",
+    strengths: [
+      "is making impressive strides in English language acquisition and communication",
+      "demonstrates growing confidence in speaking, reading, and writing in English",
+      "vocabulary development is strong — applies new academic language with accuracy",
+      "shows remarkable perseverance and a genuine commitment to language learning",
+      "actively participates in class and makes excellent use of language supports and scaffolds",
+      "writing in English is becoming more organized, detailed, and expressive",
+      "shows strong listening comprehension and follows complex classroom instruction independently",
+      "is making excellent progress transitioning toward greater independence in English-language tasks",
+    ],
+    growth: [
+      "needs additional support building academic English vocabulary",
+      "reading comprehension in English requires continued scaffolding and practice",
+      "written English needs further development — sentence structure support is recommended",
+      "needs encouragement to take more risks using English during class discussions",
+      "would benefit from more structured opportunities to practice speaking and listening in English",
+      "additional home practice with English reading and vocabulary will accelerate growth significantly",
+      "needs to use provided language supports and graphic organizers more consistently",
+      "transitioning to greater independence in English-language tasks is a key area of focus",
+    ],
+  },
+  "💡 SpEd": {
+    color: "#4a1e6e", bg: "#ede9fe",
+    strengths: [
+      "is making meaningful progress toward their IEP goals this marking period",
+      "demonstrates strong self-advocacy and uses accommodations effectively",
+      "shows impressive growth in the areas targeted by their learning plan",
+      "the progress made this period reflects real dedication — we are proud",
+      "responds exceptionally well to support strategies and applies them with growing independence",
+      "is building confidence in ways that are genuinely exciting to observe",
+      "demonstrates a positive attitude toward challenges and persists through difficulty with support",
+      "the growth shown this period is a direct reflection of hard work and a strong team effort",
+    ],
+    growth: [
+      "additional support is needed to make progress toward current IEP goals",
+      "would benefit from more consistent use of provided accommodations and supports",
+      "a check-in meeting with the IEP team may be helpful to review current supports",
+      "we recommend continued collaboration between home and school to reinforce strategies",
+      "needs encouragement to self-advocate and ask for help when needed",
+      "transitions between tasks and activities continue to be an area requiring additional support",
+      "maintaining focus and on-task behavior during independent work remains a challenge",
+      "we encourage continued use of at-home support strategies to reinforce classroom learning",
+    ],
+  },
+  "🌎 Foreign Language": {
+    color: "#1b4965", bg: "#caf0f8",
+    strengths: [
+      "is making impressive progress in acquiring new vocabulary and language structures",
+      "demonstrates strong pronunciation, fluency, and confidence when speaking the target language",
+      "consistently completes foreign language assignments with care and attention to detail",
+      "shows genuine enthusiasm and curiosity for language learning and cultural exploration",
+      "applies grammar rules and vocabulary accurately in both written and spoken work",
+      "has shown remarkable growth in reading and writing in the target language this marking period",
+      "participates actively in language activities, conversations, and cultural discussions",
+      "retains new vocabulary and structures with impressive consistency",
+    ],
+    growth: [
+      "needs more consistent practice with vocabulary and grammar at home",
+      "written work in the target language contains frequent errors that need additional review",
+      "needs to participate more actively during oral language practice and conversations",
+      "foreign language homework needs more consistent completion and effort",
+      "would benefit from daily review of vocabulary and language structures outside of class",
+      "struggles to retain new vocabulary — flashcard practice at home is strongly encouraged",
+      "needs to take more risks speaking in the target language during class",
+      "reading comprehension in the target language requires additional practice and support",
+    ],
+  },
+  "🔵 General": {
+    color: "#374151", bg: "#f3f4f6",
+    strengths: [
+      "is having an excellent week across all subject areas",
+      "brings consistent effort and a positive attitude to every class",
+      "is a pleasure to work with — engaged, focused, and always prepared",
+      "shows impressive growth that reflects dedication both in and out of school",
+      "is a positive presence in the classroom and a role model for peers",
+      "demonstrates strong organizational skills and comes prepared every day",
+      "has made notable improvements this period that reflect real commitment and effort",
+      "is reaching their potential and we are proud of the progress shown",
+    ],
+    growth: [
+      "would benefit from additional support across multiple subject areas",
+      "extra help sessions are strongly recommended to build confidence and skills",
+      "organizational skills — including materials, assignments, and deadlines — need attention",
+      "a parent-teacher conference would be helpful to discuss a support plan",
+      "needs to demonstrate more consistent effort and engagement across all classes",
+      "arriving to class on time and fully prepared will make a significant difference",
+      "needs to take greater ownership of their learning and seek help when needed",
+      "we are here to support — please encourage reaching out for extra help regularly",
+    ],
+  },
+};
 
 const LANGUAGES = {
   en: { label: "English", flag: "🇺🇸" },
@@ -1086,17 +988,9 @@ const TRANSLATIONS = {
 };
 
 
+
 function App() {
   const [step, setStep] = useState("form");
-  const [authStep, setAuthStep] = useState("loading"); // loading | login | signup | app | confirm
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
-  const [userProfile, setUserProfile] = useState(null); // {email, plan, reports_this_month}
-  const [reportCount, setReportCount] = useState(0);
-  const [showPaywall, setShowPaywall] = useState(false);
-  const [foundingCount, setFoundingCount] = useState(0);
   const [reportFrequency, setReportFrequency] = useState("weekly");
   const [termType, setTermType] = useState("Marking Period");
   const [markingPeriodDate, setMarkingPeriodDate] = useState("");
@@ -1121,7 +1015,6 @@ function App() {
   const [customGrade, setCustomGrade] = useState("");
   const [openCategory, setOpenCategory] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [showToast, setShowToast] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [gdocLoading, setGdocLoading] = useState(false);
   const [gdocDone, setGdocDone] = useState(false);
@@ -1139,121 +1032,6 @@ function App() {
   const totalSelected = Object.values(selectedPrompts).flat().length;
 
 
-  // ── Auth & Profile Functions ──────────────────────────────
-
-  React.useEffect(() => {
-    if (!supabase) { setAuthStep("app"); return; }
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        loadProfile(session.user);
-      } else {
-        setAuthStep("login");
-      }
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        loadProfile(session.user);
-      } else {
-        setAuthStep("login");
-        setUserProfile(null);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadProfile = async (user) => {
-    if (!supabase) return;
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      if (error || !data) {
-        // Create profile if doesn't exist
-        const now = new Date();
-        const newProfile = {
-          id: user.id,
-          email: user.email,
-          plan: "free",
-          reports_this_month: 0,
-          report_month: now.getMonth() + 1,
-          report_year: now.getFullYear(),
-          created_at: now.toISOString(),
-        };
-        await supabase.from("profiles").insert(newProfile);
-        setUserProfile(newProfile);
-        setReportCount(0);
-      } else {
-        // Reset count if new month
-        const now = new Date();
-        if (data.report_month !== now.getMonth() + 1 || data.report_year !== now.getFullYear()) {
-          await supabase.from("profiles").update({
-            reports_this_month: 0,
-            report_month: now.getMonth() + 1,
-            report_year: now.getFullYear(),
-          }).eq("id", user.id);
-          data.reports_this_month = 0;
-        }
-        setUserProfile(data);
-        setReportCount(data.reports_this_month || 0);
-      }
-      // Get founding member count
-      const { count } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("plan", "founding");
-      setFoundingCount(count || 0);
-      setAuthStep("app");
-    } catch (err) {
-      console.error("Profile error:", err);
-      setAuthStep("app");
-    }
-  };
-
-  const handleSignUp = async () => {
-    if (!authEmail || !authPassword) { setAuthError("Please enter email and password."); return; }
-    if (authPassword.length < 6) { setAuthError("Password must be at least 6 characters."); return; }
-    setAuthLoading(true); setAuthError("");
-    const { error } = await supabase.auth.signUp({ email: authEmail, password: authPassword });
-    if (error) { setAuthError(error.message); setAuthLoading(false); return; }
-    setAuthStep("confirm");
-    setAuthLoading(false);
-  };
-
-  const handleLogin = async () => {
-    if (!authEmail || !authPassword) { setAuthError("Please enter email and password."); return; }
-    setAuthLoading(true); setAuthError("");
-    const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPassword });
-    if (error) { setAuthError(error.message); setAuthLoading(false); return; }
-    setAuthLoading(false);
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setStep("form");
-    setSelectedPrompts({});
-    setSelectedSubjectPrompts([]);
-    setEditedReport("");
-    setTranslatedReport("");
-  };
-
-  const handleGenerateWithLimit = () => {
-    const isPro = userProfile && (userProfile.plan === "pro" || userProfile.plan === "founding" || userProfile.plan === "school");
-    const FREE_LIMIT = 5;
-    if (!isPro && reportCount >= FREE_LIMIT) {
-      setShowPaywall(true);
-      return;
-    }
-    // Increment count
-    const newCount = reportCount + 1;
-    setReportCount(newCount);
-    if (supabase && userProfile) {
-      supabase.from("profiles").update({ reports_this_month: newCount }).eq("id", userProfile.id);
-    }
-    setEditedReport(generateReport());
-    setStep("preview");
-  };
 
   const generateReport = () => {
     const lines = [];
@@ -1457,143 +1235,6 @@ ${htmlParagraphs}
   };
 
   return (
-
-    {/* ── LOADING ── */}
-    {authStep === "loading" && (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center", color: "white" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>💬</div>
-          <div style={{ fontSize: 18, fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>Loading GradeRelay...</div>
-        </div>
-      </div>
-    )}
-
-    {/* ── EMAIL CONFIRM ── */}
-    {authStep === "confirm" && (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div className="card" style={{ maxWidth: 440, width: "100%", padding: 40, textAlign: "center" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>📧</div>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", color: "#4c1d95", marginBottom: 12 }}>Check your email!</h2>
-          <p style={{ color: "#6b7280", lineHeight: 1.7, marginBottom: 24 }}>
-            We sent a confirmation link to <strong>{authEmail}</strong>.<br/>
-            Click it to activate your account, then come back and log in.
-          </p>
-          <button className="primary-btn" onClick={() => setAuthStep("login")} style={{ width: "100%" }}>
-            Back to Login
-          </button>
-        </div>
-      </div>
-    )}
-
-    {/* ── LOGIN / SIGNUP ── */}
-    {(authStep === "login" || authStep === "signup") && (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div className="card" style={{ maxWidth: 440, width: "100%", padding: 40 }}>
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <div style={{ fontSize: 48, marginBottom: 8 }}>💬</div>
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, color: "#4c1d95", margin: 0 }}>GradeRelay</h1>
-            <p style={{ color: "#6b7280", marginTop: 4, fontSize: 14 }}>Connecting Teachers &amp; Families</p>
-          </div>
-
-          <div style={{ display: "flex", background: "#f3f4f6", borderRadius: 10, padding: 4, marginBottom: 24, gap: 4 }}>
-            {["login","signup"].map(tab => (
-              <button key={tab} onClick={() => { setAuthStep(tab); setAuthError(""); }}
-                style={{ flex: 1, padding: "8px 0", border: "none", borderRadius: 8, cursor: "pointer",
-                  fontFamily: "'Source Serif 4', serif", fontSize: 13, fontWeight: 700, transition: "all 0.2s",
-                  background: authStep === tab ? "linear-gradient(135deg,#3b0764,#4c1d95)" : "transparent",
-                  color: authStep === tab ? "white" : "#6b7280",
-                }}>
-                {tab === "login" ? "Log In" : "Sign Up"}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>EMAIL</label>
-              <input className="input-field" type="email" placeholder="teacher@school.edu"
-                value={authEmail} onChange={e => setAuthEmail(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && (authStep === "login" ? handleLogin() : handleSignUp())}
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", display: "block", marginBottom: 4 }}>PASSWORD</label>
-              <input className="input-field" type="password" placeholder={authStep === "signup" ? "At least 6 characters" : "Your password"}
-                value={authPassword} onChange={e => setAuthPassword(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && (authStep === "login" ? handleLogin() : handleSignUp())}
-              />
-            </div>
-            {authError && (
-              <div style={{ padding: "10px 14px", background: "#fef2f2", borderRadius: 8, color: "#b91c1c", fontSize: 13 }}>
-                ⚠️ {authError}
-              </div>
-            )}
-            <button className="primary-btn" onClick={authStep === "login" ? handleLogin : handleSignUp}
-              disabled={authLoading} style={{ width: "100%", opacity: authLoading ? 0.7 : 1 }}>
-              {authLoading ? "Please wait..." : authStep === "login" ? "Log In" : "Create Free Account"}
-            </button>
-          </div>
-
-          {authStep === "signup" && (
-            <div style={{ marginTop: 16, padding: "12px 14px", background: "#f0fdf4", borderRadius: 8, fontSize: 12.5, color: "#166534" }}>
-              ✅ Free plan includes <strong>5 reports/month</strong>. Upgrade anytime for unlimited access.
-            </div>
-          )}
-
-          <div style={{ marginTop: 20, textAlign: "center", fontSize: 12, color: "#9ca3af" }}>
-            🔒 FERPA-compliant · No student data stored · Your reports stay private
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* ── PAYWALL MODAL ── */}
-    {showPaywall && (
-      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div className="card" style={{ maxWidth: 480, width: "100%", padding: 36, textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", color: "#4c1d95", marginBottom: 8 }}>You've used your 5 free reports</h2>
-          <p style={{ color: "#6b7280", lineHeight: 1.7, marginBottom: 24 }}>
-            Upgrade to GradeRelay Pro for unlimited reports, translation into 9 languages, and all export options.
-          </p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-            {foundingCount < FOUNDING_LIMIT && (
-              <a href={`https://checkout.stripe.com/pay/${PRICE_FOUNDING}`} target="_blank" rel="noopener noreferrer"
-                style={{ display: "block", padding: "14px 20px", borderRadius: 10, textDecoration: "none",
-                  background: "linear-gradient(135deg,#4c1d95,#7c3aed)", color: "white", fontWeight: 700, fontSize: 15,
-                  fontFamily: "'Source Serif 4', serif" }}>
-                💜 Founding Member — $44.95 lifetime
-                <div style={{ fontSize: 11, fontWeight: 400, marginTop: 3, opacity: 0.85 }}>
-                  Only {FOUNDING_LIMIT - foundingCount} spots left · Unlimited forever
-                </div>
-              </a>
-            )}
-            <a href={`https://checkout.stripe.com/pay/${PRICE_ANNUAL}`} target="_blank" rel="noopener noreferrer"
-              style={{ display: "block", padding: "12px 20px", borderRadius: 10, textDecoration: "none",
-                background: "linear-gradient(135deg,#0e7490,#0891b2)", color: "white", fontWeight: 700, fontSize: 14,
-                fontFamily: "'Source Serif 4', serif" }}>
-              📅 Pro Annual — $49/year
-              <div style={{ fontSize: 11, fontWeight: 400, marginTop: 2, opacity: 0.85 }}>~$4.08/month · Best value</div>
-            </a>
-            <a href={`https://checkout.stripe.com/pay/${PRICE_MONTHLY}`} target="_blank" rel="noopener noreferrer"
-              style={{ display: "block", padding: "12px 20px", borderRadius: 10, textDecoration: "none",
-                background: "#f3f4f6", color: "#374151", fontWeight: 700, fontSize: 14,
-                fontFamily: "'Source Serif 4', serif", border: "2px solid #e5e7eb" }}>
-              📆 Pro Monthly — $5.99/month
-            </a>
-          </div>
-
-          <button onClick={() => setShowPaywall(false)}
-            style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, cursor: "pointer" }}>
-            Maybe later — close
-          </button>
-        </div>
-      </div>
-    )}
-
-    {/* ── MAIN APP ── */}
-    {authStep === "app" && (
     <div style={{
       minHeight: "100vh",
       background: "transparent",
@@ -1669,7 +1310,6 @@ ${htmlParagraphs}
       `}</style>
 
       {/* Header */}
-      {/* Toast notification */}
       {showToast && (
         <div style={{
           position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)",
@@ -1690,7 +1330,6 @@ ${htmlParagraphs}
             style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", fontSize: 16, marginLeft: 4 }}>✕</button>
         </div>
       )}
-      {/* User bar */}
       {userProfile && (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
           background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: "8px 16px", marginBottom: 12,
@@ -1968,7 +1607,6 @@ ${htmlParagraphs}
                 {activeSubject && (() => {
                   const subj = SUBJECT_PROMPTS[activeSubject];
                   return (
-                    <div>
                       <div style={{ fontSize: 12, fontWeight: 700, color: subj.color, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Strengths</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
                         {subj.strengths.map((p, i) => {
@@ -2099,7 +1737,7 @@ ${htmlParagraphs}
             </section>
 
             <div style={{ textAlign: "center" }}>
-              <button className="primary-btn" onClick={handleGenerateWithLimit}>
+              <button className="primary-btn" onClick={() => { setEditedReport(generateReport()); setStep("preview"); }}>
                 Generate Progress Report →
               </button>
             </div>
@@ -2253,7 +1891,6 @@ ${htmlParagraphs}
                   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                   const smsLink = isMobile ? `sms:?body=${encodeURIComponent(translatedReport)}` : null;
                   return (
-                    <div>
                       {/* Translated text box — editable */}
                       <div style={{ marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontSize: 12, color: "#0e7490", fontWeight: 700 }}>✅ Translation complete — click to edit before sending</span>
@@ -2548,10 +2185,13 @@ ${htmlParagraphs}
           </a>
         </p>
       </div>
-    </div>
-    )}
   );
 }
+
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(React.createElement(App));
+  
 
     const container = document.getElementById('root');
     const root = ReactDOM.createRoot(container);
