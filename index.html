@@ -57,6 +57,32 @@
   <div class="bg-shimmer"></div>
   <div class="bg-dots"></div>
   <div id="root"></div>
+<div id="marketing" style="display:none; max-width:480px; margin:20px auto 0; padding:0 24px 40px;">
+  <p style="text-align:center; color:rgba(255,255,255,0.85); font-size:14px; font-family:'Source Serif 4',serif; margin-bottom:14px;">
+    Generate professional parent progress reports in 60 seconds
+  </p>
+  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+    <div style="background:rgba(255,255,255,0.1); border-radius:10px; padding:10px 14px; color:rgba(255,255,255,0.85); font-size:13px; font-family:'Source Serif 4',serif;">📝 Daily, Weekly and Marking Period reports</div>
+    <div style="background:rgba(255,255,255,0.1); border-radius:10px; padding:10px 14px; color:rgba(255,255,255,0.85); font-size:13px; font-family:'Source Serif 4',serif;">🎓 Pre-K through 12th grade — 12 subject areas</div>
+    <div style="background:rgba(255,255,255,0.1); border-radius:10px; padding:10px 14px; color:rgba(255,255,255,0.85); font-size:13px; font-family:'Source Serif 4',serif;">🌐 Translates into 9 languages</div>
+    <div style="background:rgba(255,255,255,0.1); border-radius:10px; padding:10px 14px; color:rgba(255,255,255,0.85); font-size:13px; font-family:'Source Serif 4',serif;">🔒 FERPA compliant — no student names stored</div>
+  </div>
+  <p style="text-align:center; color:rgba(255,255,255,0.6); font-size:12px; font-family:'Source Serif 4',serif;">
+    Free plan: 5 reports/month. No credit card required.
+  </p>
+</div>
+<script>
+  // Show marketing section only on login/signup screen
+  var observer = new MutationObserver(function() {
+    var root = document.getElementById('root');
+    var mkt = document.getElementById('marketing');
+    if (!root || !mkt) return;
+    var hasApp = root.querySelector('.card') || root.querySelector('[class*="primary-btn"]');
+    var hasLogin = root.querySelector('input[type="email"]');
+    mkt.style.display = hasLogin && !hasApp ? 'block' : 'none';
+  });
+  observer.observe(document.getElementById('root'), { childList: true, subtree: true });
+</script>
   <script src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
