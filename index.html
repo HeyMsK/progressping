@@ -1836,9 +1836,28 @@ function App() {
                     style={{ width: "100%", minHeight: 200, padding: 14, fontSize: 13, lineHeight: 1.7,
                       border: "1px solid #99f6e4", borderRadius: 8, resize: "vertical", fontFamily: "'Source Serif 4', serif" }} />
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                    <button onClick={() => navigator.clipboard.writeText(translatedReport)}
+                    <button onClick={() => {
+                        const txt = translatedReport;
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(txt).catch(() => {
+                            const ta = document.createElement("textarea");
+                            ta.value = txt;
+                            document.body.appendChild(ta);
+                            ta.select();
+                            document.execCommand("copy");
+                            document.body.removeChild(ta);
+                          });
+                        } else {
+                          const ta = document.createElement("textarea");
+                          ta.value = txt;
+                          document.body.appendChild(ta);
+                          ta.select();
+                          document.execCommand("copy");
+                          document.body.removeChild(ta);
+                        }
+                      }}
                       style={{ padding: "8px 16px", background: "#7c3aed", color: "white", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
-                      📋 Copy
+                      📋 Copy Translated
                     </button>
                     <a href={`mailto:?body=${encodeURIComponent(translatedReport)}`}
                       style={{ padding: "8px 16px", background: "#6d28d9", color: "white", borderRadius: 8, fontWeight: 700, fontSize: 13, textDecoration: "none" }}>
